@@ -1,0 +1,15 @@
+@require '../variables'
+
+.fade-enter
+  transition opacity 0.3s
+  opacity 0
+
+.fade-enter.fade-enter-active
+  opacity 1
+
+.fade-leave
+  transition opacity 0.3s
+  opacity 1
+
+.fade-leave.fade-leave-active
+  opacity 0

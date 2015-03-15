@@ -1,0 +1,44 @@
+When a user shares a document
+- we will call this user the 'host'
+- the host sends a message to server requesting a new url
+- server generates a new url slug, and stores it along with the user's ip
+- the user keeps a socket open with the server
+- the server maintains the url as long as there is a host keeping an open socket
+
+When a new user requests the url from the server
+- the server responds with the hosts ip
+- the user connects to the host directly
+- the host assigns the user an incremantal id, and sends the users ip to the
+  server along with the id
+- the host sends the user a list of peers, the current state of the document,
+  and its current clock
+- the user connects to each peer, sending the clock it received from the host
+- each peer sends the user any changes it has made after that clock
+
+When a user makes a change to the document
+- the user increments its vector clock
+- the user makes the change locally, and adds it along w/ the updated clock to a
+  list of recent changes
+- the user sends the path, updated value, and updated clock to each peer
+
+When a user recieves a message indicating a change to the document
+- the user compares the incoming clock to its clock
+- if the incoming clock is later, the user applies the change, appends it to its
+  list of recent changes, and updates its clock
+- if the incoming clock is earlier, the user looks in its list of changes until
+  it finds the immediately preceding change.
+- if no paths in the conflicting changes overlap, the user applies the change
+  and inserts it in place to the list of recent changes
+- if paths do conflict, the user rewinds state to the immediately preceding
+  change, then applies all remaining changes in order.
+- conflicts in clicks are resolved in favor of the author with lowest id
+
+When the server loses connection with the host
+- it makes the active peer with the smallest id the new host
+
+questions:
+- is there a way to make this work w/o designating one peer a host? the server
+  has to know the ip of at least one peer to pass to newly connecting users
+- do we need all users to keep sockets open w/ server so that it can know who is
+  available to become host? could do something where peers elect a host
+- do we need a way to detect lost messages? should we send acks? something else?
