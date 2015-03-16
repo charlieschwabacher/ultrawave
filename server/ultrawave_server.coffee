@@ -9,9 +9,9 @@ log = (message) -> console.log message
 module.exports = class UltrawaveServer
 
 
-  constructor: ->
+  constructor: (port) ->
 
-    @wss = new WSServer
+    @wss = new WSServer {port}
     @rooms = new MapSet
     @memberships = new MapSet
 

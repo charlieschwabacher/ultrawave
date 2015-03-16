@@ -21,7 +21,9 @@ module.exports = class MapMap
     if arguments.length is 1
       @map.delete key1
     else
-      @map.get(key1)?.delete key2
+      if map = @map.get key1
+        map.delete key2
+        @map.delete key1 if map.size is 0
 
   has: (key1, key2) ->
     if arguments.length is 1

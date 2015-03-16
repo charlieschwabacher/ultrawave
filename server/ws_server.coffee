@@ -4,8 +4,8 @@ WebSocketServer = ws.Server
 
 module.exports = class WSServer
 
-  constructor: ->
-    @wss = new WebSocketServer port: 3002
+  constructor: (opts) ->
+    @wss = new WebSocketServer opts
     @handlers = new MapSet
     @sockets = new Map
 

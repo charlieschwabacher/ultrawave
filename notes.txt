@@ -1,25 +1,47 @@
-When a user shares a document
-- we will call this user the 'host'
-- the host sends a message to server requesting a new url
-- server generates a new url slug, and stores it along with the user's ip
-- the user keeps a socket open with the server
-- the server maintains the url as long as there is a host keeping an open socket
+in the middle of writing clearArray function on CursorCache!
 
-When a new user requests the url from the server
-- the server responds with the hosts ip
-- the user connects to the host directly
-- the host assigns the user an incremantal id, and sends the users ip to the
-  server along with the id
-- the host sends the user a list of peers, the current state of the document,
-  and its current clock
-- the user connects to each peer, sending the clock it received from the host
-- each peer sends the user any changes it has made after that clock
+
+requirements:
+- data must be eventually consistent between peers
+- messages may be delivered out of order
+- messages may be lost or delivered multiple times
+
+
+When a peer shares a document
+- the peer sends a 'request room' message to server with a requested room name
+- if the name is in use, the server responds with 'reject'
+- otherwise the server creates the room, responds with 'start' and the peer's id
+  in the room
+
+
+When a peer requests an existing document
+- the peer sends a 'join' message to the server with the room name
+- the server sends a 'start' message with the peer's id in the room
+- the server sends 'request offer' messages to each exiting peer in the room
+- the existing create offers and send 'offer' messages to the server w/ sdps
+- the server forwards the 'offer' messages to the connecting peer
+- the connecting peer creates answers and sends 'answer' messages to the server
+  along with sds
+- the server forwards the 'answer' messages to the existing peers
+- the connecting and existing peers receive ice candidates, send 'candidate'
+  messages to the server along with their candidates
+- the server forwards the candidate messages to peers allowing connections to be
+  formed
+- the connecting peer sends a 'request document' message to the first existing
+  peer it forms a connection to
+- the peer responds with a 'document' message the current document and clock
+- the peer sends 'request changes' with the document clock to each other peer,
+  requesting any changes they have made after the clock
+- the existing peers respond send any changes they have made after the clock,
+  and begin sending new changes the connecting peer
+
 
 When a user makes a change to the document
 - the user increments its vector clock
 - the user makes the change locally, and adds it along w/ the updated clock to a
   list of recent changes
 - the user sends the path, updated value, and updated clock to each peer
+
 
 When a user recieves a message indicating a change to the document
 - the user compares the incoming clock to its clock
@@ -29,16 +51,16 @@ When a user recieves a message indicating a change to the document
   it finds the immediately preceding change.
 - if no paths in the conflicting changes overlap, the user applies the change
   and inserts it in place to the list of recent changes
-- if paths do conflict, the user rewinds state to the immediately preceding
+- if paths do overlap, the user rewinds state to the immediately preceding
   change, then applies all remaining changes in order.
-- conflicts in clicks are resolved in favor of the author with lowest id
+- conflicts are resolved in favor of the author with lowest id
+- if the incoming clock indicates a missed message from one peer, the user sets
+  a timeout after which it will send a 'request sync' message with the missing
+  author id and clock ticks
+- the user invalidates any existing timeouts that the incoming message makes
+  redundant
 
-When the server loses connection with the host
-- it makes the active peer with the smallest id the new host
 
-questions:
-- is there a way to make this work w/o designating one peer a host? the server
-  has to know the ip of at least one peer to pass to newly connecting users
-- do we need all users to keep sockets open w/ server so that it can know who is
-  available to become host? could do something where peers elect a host
-- do we need a way to detect lost messages? should we send acks? something else?
+Ultrawave.create room, data, (root) ->
+
+Ultrawave.join room, (root) ->

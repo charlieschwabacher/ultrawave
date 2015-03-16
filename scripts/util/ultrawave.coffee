@@ -1,14 +1,16 @@
 # default event types are 'open', 'close', 'join', 'leave', and 'peer'
 
-WS = require './util/ws'
-MapSet = require './util/map_set'
-MapMap = require './util/map_map'
+WS = require './ws'
+MapSet = require './map_set'
+MapMap = require './map_map'
+
+
 RTCPeerConnection = window.webkitRTCPeerConnection or window.mozRTCPeerConnection
 RTCSessionDescription = window.RTCSessionDescription or window.mozRTCSessionDescription
 RTCIceCandidate = window.RTCIceCandidate or window.mozRTCIceCandidate
 
 
-log = (message) -> console.log message
+log = (message) -> #console.log message
 
 
 
@@ -35,7 +37,6 @@ module.exports = class Ultrawave
         @channels.delete room, id
 
       dataChannel.addEventListener 'message', (e) =>
-        console.log 'received message from ' + id + ' in ' + room + ': ' + e.data
         [type, payload] = JSON.parse e.data
         @handlers.get(type)?.forEach (handler) -> handler room, id, payload
 
