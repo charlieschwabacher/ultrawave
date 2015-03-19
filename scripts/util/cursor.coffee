@@ -70,6 +70,8 @@ module.exports =
         result = modifier target, key
         Object.freeze target
 
+        cache.clearPath fullPath
+
         update newData
 
         result
@@ -85,8 +87,8 @@ module.exports =
         if fullPath.length > 0
           @modifyAt fullPath, (target, key) ->
             target[key] = deepFreeze value
-            cache.clearPath fullPath
         else
+          cache.reset()
           update value
 
         value
@@ -98,67 +100,11 @@ module.exports =
         if fullPath.length > 0
           @modifyAt fullPath, (target, key) ->
             delete target[key]
-            cache.clearPath fullPath
         else
+          cache.reset()
           update undefined
 
         true
-
-      push: (path, value) ->
-        fullPath = @path.concat path
-        @recordChange 'push', [fullPath, value]
-
-        @modifyAt fullPath, (target, key) ->
-          arr = target[key]
-          throw new Error 'push called on non array' unless Array.isArray arr
-          updated = arr.slice 0
-          updated.push value
-          target[key] = deepFreeze updated
-
-          cache.clearPath fullPath
-
-          value
-
-      pop: (path) ->
-        fullPath = @path.concat path
-        @recordChange 'pop', [fullPath]
-
-        @modifyAt fullPath, (target, key) ->
-          arr = target[key]
-          throw new Error 'pop called on non array' unless Array.isArray arr
-          target[key] = deepFreeze arr.slice 0, -1
-
-          cache.clearPath fullPath
-
-          arr[arr.length - 1]
-
-      unshift: (path, value) ->
-        fullPath = @path.concat path
-        @recordChange 'unshift', [fullPath, value]
-
-        @modifyAt fullPath, (target, key) ->
-          arr = target[key]
-          throw new Error 'unshift called on non array' unless Array.isArray arr
-          updated = arr.slice 0
-          updated.unshift value
-          target[key] = deepFreeze updated
-
-          cache.clearArray fullPath, 0
-
-          value
-
-      shift: (path) ->
-        fullPath = @path.concat path
-        @recordChange 'shift', [fullPath]
-
-        @modifyAt fullPath, (target, key) ->
-          arr = target[key]
-          throw new Error 'pop called on non array' unless Array.isArray arr
-          target[key] = deepFreeze arr.slice 1
-
-          cache.clearArray fullPath, 0
-
-          arr[0]
 
       splice: (path, start, deleteCount, elements...) ->
         fullPath = @path.concat path
@@ -171,10 +117,19 @@ module.exports =
           result = updated.splice start, deleteCount, elements...
           target[key] = deepFreeze updated
 
-          count = if deleteCount is elements.length then elements.length else undefined
-          cache.clearArray fullPath, start, count
-
           result
+
+      push: (path, value) ->
+        @splice path, Infinity, 0, value
+
+      pop: (path) ->
+        @splice(path, -1, 1)[0]
+
+      unshift: (path, value) ->
+        @splice path, 0, 0, value
+
+      shift: (path) ->
+        @splice(path, 0, 1)[0]
 
       merge: (newData) ->
         cache.clearObject @path, newData

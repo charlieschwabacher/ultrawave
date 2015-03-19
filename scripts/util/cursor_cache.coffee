@@ -5,10 +5,26 @@ isEmpty = (o) ->
   true
 
 
+# this is used to cache cursors so that two cursors to the same object will be
+# referrentially equal.  based on its use in cursor, it gaurantees that two
+# cursors to different objects will never be equal, but it sometimes clears more
+# of the cache than is necessary.
+#
+# This can be updated to avoid clearing - Maybe something better can be done
+# using a Map, and if not, it needs to be aware of array splices so that all
+# children do not need to be cleared at the end of clearpath.
+
+
 module.exports = class CursorCache
 
+
   constructor: ->
+    @reset()
+
+
+  reset: ->
     @root = children: {}
+
 
   get: (path) ->
     target = @root
@@ -17,12 +33,14 @@ module.exports = class CursorCache
       return undefined unless target?
     target.cursor
 
+
   store: (cursor) ->
     target = @root
     for key in cursor.path
       target.children[key] ||= children: {}
       target = target.children[key]
     target.cursor = cursor
+
 
   clearPath: (path) ->
     target = @root
@@ -35,6 +53,8 @@ module.exports = class CursorCache
       nodes.push target
       delete target.cursor
 
+    target.children = {}
+
     # prune empty nodes along path starting at leaves
     # for i in [nodes.length - 1 ... 0]
     #   node = nodes[i]
@@ -43,10 +63,7 @@ module.exports = class CursorCache
     #   else
     #     break
 
-    @root
-
-
-  clearArray: ->
+    target
 
 
   # recursively clear changes made by merge
