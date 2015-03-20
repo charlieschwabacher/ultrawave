@@ -1,4 +1,5 @@
-in the middle of writing clearArray function on CursorCache!
+in the middle of refactoring CursorCache to use arrays or maps, store cursor
+using a symbol, children directly
 
 
 requirements:
