@@ -15,10 +15,9 @@ module.exports =
 
     cache = new CursorCache
     pending = false
-    clock = 0
 
-
-    changes = []
+    # clock = 0
+    # changes = []
 
 
     update = (newData) ->
@@ -53,7 +52,7 @@ module.exports =
         target
 
       recordChange: (method, args) ->
-        changes.push [clock, method, args]
+        # changes.push [clock, method, args]
 
       modifyAt: (fullPath, modifier) ->
         newData = target = if Array.isArray data then [] else {}
@@ -146,4 +145,9 @@ module.exports =
     # perform callback one time to start
     onChange new Cursor
 
+
+    # return a 'handle' to the cursor instance
+    cache: -> cache
+    data: -> data
+    pending: -> pending
 
