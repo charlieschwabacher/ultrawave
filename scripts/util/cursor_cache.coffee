@@ -1,7 +1,7 @@
 # this is used to cache cursors so that two cursors to the same object will be
 # referrentially equal.  based on its use in cursor, it gaurantees that two
-# cursors to different objects will never be equal, but it sometimes clears more
-# of the cache than is necessary.
+# cursors to different objects will never be equal, but it sometimes clears
+# more of the cache than is necessary.
 #
 # This can be updated to avoid clearing - it needs to be aware of array splices
 # so that all children do not need to be cleared at the end of clearpath.
@@ -64,7 +64,7 @@ module.exports = class CursorCache
       dataTarget = dataTarget?[key]
       unless (next = get target, key)?
         next = if dataTarget instanceof Array then [] else new Map
-        target.set key, next
+        set target, key, next
       target = next
     set target, cursorSymbol, cursor
 
@@ -103,12 +103,14 @@ module.exports = class CursorCache
 
   # clear certain elements in an array by index, shifting following elements
 
-  spliceArray: (path, start, removed, added) ->
+  spliceArray: (path, start, deleteCount, addCount) ->
     target = @root
     for key in path
       return unless (target = get target, key)?
 
     unless target instanceof Array
-      throw new Error 'CursorCache may only slice array'
+      throw new Error 'CursorCache attempted spliceArray on non array'
 
-    target.splice start, removed, new Array added
+    target.splice start, deleteCount, (new Array addCount)...
+
+

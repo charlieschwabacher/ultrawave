@@ -12,7 +12,6 @@ module.exports =
 
     # this is the master reference to data, any change will replace this object
     data = deepFreeze inputData
-
     cache = new CursorCache -> data
     pending = false
 
@@ -27,7 +26,7 @@ module.exports =
         setTimeout ->
           pending = false
           onChange new Cursor
-
+      newData
 
 
     # create local cursor class w/ access to mutable reference to data
@@ -69,8 +68,6 @@ module.exports =
         result = modifier target, key
         Object.freeze target
 
-        cache.clearPath fullPath
-
         update newData
 
         result
@@ -84,6 +81,7 @@ module.exports =
         @recordChange 'set', [fullPath, value]
 
         if fullPath.length > 0
+          cache.clearPath fullPath
           @modifyAt fullPath, (target, key) ->
             target[key] = deepFreeze value
         else
@@ -97,6 +95,7 @@ module.exports =
         @recordChange 'delete', [fullPath]
 
         if fullPath.length > 0
+          cache.clearPath fullPath
           @modifyAt fullPath, (target, key) ->
             delete target[key]
         else
@@ -105,9 +104,24 @@ module.exports =
 
         true
 
+      merge: (newData) ->
+        @recordChange 'merge', [@path, newData]
+
+        if @path.length > 0
+          cache.clearPath @path
+          cache.clearObject @path, newData
+          @modifyAy @path, (target, key) ->
+            target[key] = deepMerge target[key], deepFreeze newData
+        else
+          cache.clearObject @path, newData
+          update deepMerge data, deepFreeze newData
+
       splice: (path, start, deleteCount, elements...) ->
         fullPath = @path.concat path
         @recordChange 'splice', [fullPath, start, deleteCount, elements]
+
+        cache.clearPath fullPath
+        cache.spliceArray fullPath, start, deleteCount, elements.length
 
         @modifyAt fullPath, (target, key) ->
           arr = target[key]
@@ -129,10 +143,6 @@ module.exports =
 
       shift: (path) ->
         @splice(path, 0, 1)[0]
-
-      merge: (newData) ->
-        cache.clearObject @path, newData
-        @set [], deepMerge @get(), deepFreeze newData
 
       bind: (path, pre) ->
         (v) => @set path, if pre then pre v else v

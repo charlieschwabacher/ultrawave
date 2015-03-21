@@ -9,15 +9,16 @@ requirements:
 
 
 When a peer shares a document
-- the peer sends a 'request room' message to server with a requested room name
-- if the name is in use, the server responds with 'reject'
-- otherwise the server creates the room, responds with 'start' and the peer's id
-  in the room
+- the peer sends a 'create' message to server with a requested room name
+- if the name is in use, the server responds with 'rejected'
+- otherwise the server creates the room, responds with 'created' and the peer's
+  id in the room
 
 
 When a peer requests an existing document
 - the peer sends a 'join' message to the server with the room name
-- the server sends a 'start' message with the peer's id in the room
+- if the room does not exist, the server responds with 'rejected'
+- otherwise, the server sends a 'joined' message with the peer's id in the room
 - the server sends 'request offer' messages to each exiting peer in the room
 - the existing create offers and send 'offer' messages to the server w/ sdps
 - the server forwards the 'offer' messages to the connecting peer

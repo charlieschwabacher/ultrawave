@@ -14,3 +14,7 @@ describe 'CursorCache', ->
   describe '#clearPath', ->
 
   describe '#clearObject', ->
+
+  describe '#spliceArray', ->
+
+ 

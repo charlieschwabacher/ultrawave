@@ -165,7 +165,7 @@ describe 'Cursor', ->
       cursor = root.cursor ['a', 'e', 1]
       root.unshift ['a', 'e'], 0
       assert root.cursor(['a', 'e', 1]) isnt cursor
-      assert root.cursor(['a', 'e', 1]) is cursor
+      assert root.cursor(['a', 'e', 2]) is cursor
 
 
   describe '#shift', ->
@@ -207,20 +207,39 @@ describe 'Cursor', ->
     it 'should throw an error if the target path does not contain an array', ->
       assert.throws -> root.insertAt ['a', 'e'], 1, [1, 2]
 
-    it 'should clear cached cursors along changed paths', ->
-      cursor = root.cursor 'a'
-      root.splice ['a', 'e'], 1, 1, 9
-      assert root.cursor('a') isnt cursor
+    it 'should not clear cursor for other elements when replacing an element
+       in the array', ->
 
-      # replacing an element in the array should not clear cursor for other
-      # elements
-      cursor1 = root.cursor ['a', 'e', 1]
-      cursor2 = root.cursor ['a', 'e', 2]
+      cursor1 = root.cursor ['a', 'e', 0]
+      cursor2 = root.cursor ['a', 'e', 1]
+      cursor3 = root.cursor ['a', 'e', 2]
       root.splice ['a', 'e'], 1, 1, 8
-      assert root.cursor(['a', 'e', 1]) isnt cursor1
-      assert root.cursor(['a', 'e', 2]) is cursor2
+      assert root.cursor(['a', 'e', 0]) is cursor1
+      assert root.cursor(['a', 'e', 1]) isnt cursor2
+      assert root.cursor(['a', 'e', 2]) is cursor3
 
-      # adding an element to the array should
+    it 'should clear cursors for following but not preceding elements when
+       adding an element to the array', ->
+
+      cursor1 = root.cursor ['a', 'e', 0]
+      cursor2 = root.cursor ['a', 'e', 1]
+      cursor3 = root.cursor ['a', 'e', 2]
+      root.splice ['a', 'e'], 1, 1, 5, 6
+      assert root.cursor(['a', 'e', 0]) is cursor1
+      assert root.cursor(['a', 'e', 1]) isnt cursor2
+      assert root.cursor(['a', 'e', 2]) isnt cursor3
+
+    it 'should clear cursors for following but not preceding elements when
+       removing an element from the array', ->
+
+      cursor1 = root.cursor ['a', 'e', 0]
+      cursor2 = root.cursor ['a', 'e', 1]
+      cursor3 = root.cursor ['a', 'e', 2]
+      root.splice ['a', 'e'], 1, 1
+      assert root.cursor(['a', 'e', 0]) is cursor1
+      assert root.cursor(['a', 'e', 1]) isnt cursor2
+      assert root.cursor(['a', 'e', 2]) isnt cursor3
+
 
 
   describe '#merge', ->
