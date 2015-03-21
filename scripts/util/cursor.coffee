@@ -13,7 +13,7 @@ module.exports =
     # this is the master reference to data, any change will replace this object
     data = deepFreeze inputData
 
-    cache = new CursorCache
+    cache = new CursorCache -> data
     pending = false
 
     # clock = 0

@@ -12,13 +12,14 @@ describe 'Cursor', ->
         d: 2
       e: [1, 2, 3]
 
+
   root = null
-  history = null
+  handle = null
 
 
 
   beforeEach ->
-    Cursor.create initialData, (_root) -> root = _root
+    handle = Cursor.create initialData, (_root) -> root = _root
 
 
 
@@ -107,6 +108,13 @@ describe 'Cursor', ->
       root.set ['a', 'e'], 4
       assert root.cursor('a') isnt cursor
 
+    # cache keys for values at different paths should not collide
+    it 'works when two cursors point to equal values', ->
+      root.set ['a', 'b', 'c'], 2
+      c1 = root.cursor ['a', 'b', 'd']
+      c2 = root.cursor ['a', 'b', 'c']
+      assert c1 isnt c2
+
 
   describe '#push', ->
 
@@ -157,6 +165,7 @@ describe 'Cursor', ->
       cursor = root.cursor ['a', 'e', 1]
       root.unshift ['a', 'e'], 0
       assert root.cursor(['a', 'e', 1]) isnt cursor
+      assert root.cursor(['a', 'e', 1]) is cursor
 
 
   describe '#shift', ->
@@ -174,10 +183,11 @@ describe 'Cursor', ->
       root.shift ['a', 'e']
       assert root.cursor('a') isnt cursor
 
-      # elements in the array have all moved back by one index
+      # elements in the array have all moved forward by one index
       cursor = root.cursor ['a', 'e', 1]
-      root.unshift ['a', 'e'], 0
+      root.shift ['a', 'e']
       assert root.cursor(['a', 'e', 1]) isnt cursor
+      assert root.cursor(['a', 'e', 0]) is cursor
 
 
   describe '#splice', ->
@@ -202,10 +212,15 @@ describe 'Cursor', ->
       root.splice ['a', 'e'], 1, 1, 9
       assert root.cursor('a') isnt cursor
 
-      # elements in the array have all moved back by one index
-      cursor = root.cursor ['a', 'e', 2]
+      # replacing an element in the array should not clear cursor for other
+      # elements
+      cursor1 = root.cursor ['a', 'e', 1]
+      cursor2 = root.cursor ['a', 'e', 2]
       root.splice ['a', 'e'], 1, 1, 8
-      assert root.cursor(['a', 'e', 2]) isnt cursor
+      assert root.cursor(['a', 'e', 1]) isnt cursor1
+      assert root.cursor(['a', 'e', 2]) is cursor2
+
+      # adding an element to the array should
 
 
   describe '#merge', ->

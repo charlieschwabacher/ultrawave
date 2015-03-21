@@ -1,85 +1,114 @@
-# return true if an object has no properites, false otherwise
-isEmpty = (o) ->
-  for k, v of o
-    return false if o.hasOwnProperty k
-  true
-
-
 # this is used to cache cursors so that two cursors to the same object will be
 # referrentially equal.  based on its use in cursor, it gaurantees that two
 # cursors to different objects will never be equal, but it sometimes clears more
 # of the cache than is necessary.
 #
-# This can be updated to avoid clearing - Maybe something better can be done
-# using a Map, and if not, it needs to be aware of array splices so that all
-# children do not need to be cleared at the end of clearpath.
+# This can be updated to avoid clearing - it needs to be aware of array splices
+# so that all children do not need to be cleared at the end of clearpath.
+
+
+cursorSymbol = Symbol()
+
+
+get = (target, key) ->
+  if target instanceof Map
+    target.get key
+  else
+    target[key]
+
+set = (target, key, value) ->
+  if target instanceof Map
+    target.set key, value
+  else
+    target[key] = value
+
+del = (target, key) ->
+  if target instanceof Map
+    target.delete key
+  else
+    target[key] = undefined
+
+empty = (target) ->
+  if target instanceof Map
+    target.size is 0
+  else
+    target.length is 0 and not target[cursorSymbol]?
+
+
 
 
 module.exports = class CursorCache
 
 
-  constructor: ->
-    @reset()
+  constructor: (data) ->
+    @data = data
+    @root = new Map
 
 
   reset: ->
-    @root = children: {}
+    @root = new Map
 
 
   get: (path) ->
     target = @root
     for key in path
-      target = target.children[key]
+      target = get target, key
       return undefined unless target?
-    target.cursor
+    get target, cursorSymbol
 
 
   store: (cursor) ->
     target = @root
+    dataTarget = @data()
     for key in cursor.path
-      target.children[key] ||= children: {}
-      target = target.children[key]
-    target.cursor = cursor
+      dataTarget = dataTarget?[key]
+      unless (next = get target, key)?
+        next = if dataTarget instanceof Array then [] else new Map
+        target.set key, next
+      target = next
+    set target, cursorSymbol, cursor
 
+
+  # recursively clear changes along a path
+
+  clearPath = (node, key, parent, path) ->
+    del node, cursorSymbol
+    key = path[0]
+    return unless (next = get node, key)?
+    clearPath next, key, node, path.slice 1
+    del parent, key if empty node
 
   clearPath: (path) ->
-    target = @root
-    nodes = []
-
-    # clear cached cursors along path
-    for key, i in path
-      break unless target.children[key]?
-      target = target.children[key]
-      nodes.push target
-      delete target.cursor
-
-    target.children = {}
-
-    # prune empty nodes along path starting at leaves
-    # for i in [nodes.length - 1 ... 0]
-    #   node = nodes[i]
-    #   if isEmpty node.children
-    #     delete nodes[i - 1].children[path[i]]
-    #   else
-    #     break
-
-    target
+    clearPath @root, null, null, path
 
 
   # recursively clear changes made by merge
 
-  clearObject = (node, changes) ->
+  clearObject = (node, key, parent, changes) ->
     for k of changes
-      if (child = node.children[k])?
-        delete child.cursor
-        clearObject child, changes[k]
+      if (child = get node, k)?
+        del child, cursorSymbol
+        clearObject child, node, k, changes[k]
+        del parent, key if parent? and empty child
+
     node
 
   clearObject: (path, obj) ->
     target = @root
     for key in path
-      target = target.children[key]
-      return unless target?
+      return unless (target = get target, key)?
 
-    clearObject target, obj
+    clearObject target, null, null, obj
 
+
+  # clear certain elements in an array by index, shifting following elements
+
+  spliceArray: (path, start, removed, added) ->
+    target = @root
+    for key in path
+      return unless (target = get target, key)?
+
+    unless target instanceof Array
+      throw new Error 'CursorCache may only slice array'
+
+    target.splice start, removed, new Array added
