@@ -114,3 +114,28 @@ module.exports = class CursorCache
     target.splice start, deleteCount, (new Array addCount)...
 
 
+  # recursively count nodes in the cache tree
+
+  size = (node) ->
+    return 0 unless node?
+
+    if node instanceof Map
+
+      node.size +
+      (if node.has(cursorSymbol) then 0 else 1) +
+      (
+        for kv of node.entries()
+          console.log kv
+          [key, child] = kv
+          if key is cursorSymbol
+            0
+          else
+            size child
+      ).reduce ((memo, num) -> memo + num), 0
+    else
+      1 + node.reduce (memo, node) ->
+        size node
+      , 0
+
+  size: -> 1 + size @root
+

@@ -1,5 +1,6 @@
-in the middle of refactoring CursorCache to use arrays or maps, store cursor
-using a symbol, children directly
+just finished refactoring CursorCache to use arrays and maps, store cursor
+using a symbol and children directly.  next step is to write the cursor cache
+tests, including one proving that the cursor cache does not memory leak
 
 
 requirements:
