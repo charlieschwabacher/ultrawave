@@ -108,7 +108,6 @@ module.exports =
         @recordChange 'merge', [@path, newData]
 
         if @path.length > 0
-          cache.clearPath @path
           cache.clearObject @path, newData
           @modifyAy @path, (target, key) ->
             target[key] = deepMerge target[key], deepFreeze newData
@@ -120,7 +119,6 @@ module.exports =
         fullPath = @path.concat path
         @recordChange 'splice', [fullPath, start, deleteCount, elements]
 
-        cache.clearPath fullPath
         cache.spliceArray fullPath, start, deleteCount, elements.length
 
         @modifyAt fullPath, (target, key) ->

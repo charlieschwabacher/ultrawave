@@ -75,8 +75,8 @@ module.exports = class CursorCache
     del node, cursorSymbol
     key = path[0]
     return unless (next = get node, key)?
-    clearPath next, key, node, path.slice 1
     del parent, key if empty node
+    clearPath next, key, node, path.slice 1
 
   clearPath: (path) ->
     clearPath @root, null, null, path
@@ -94,6 +94,9 @@ module.exports = class CursorCache
     node
 
   clearObject: (path, obj) ->
+    @clearPath path
+
+    # at some point make the clear path call above just return the target
     target = @root
     for key in path
       return unless (target = get target, key)?
@@ -104,6 +107,9 @@ module.exports = class CursorCache
   # clear certain elements in an array by index, shifting following elements
 
   spliceArray: (path, start, deleteCount, addCount) ->
+    @clearPath path
+
+    # at some point make the clear path call above just return the target
     target = @root
     for key in path
       return unless (target = get target, key)?
