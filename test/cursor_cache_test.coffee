@@ -2,6 +2,8 @@ assert = require 'assert'
 CursorCache = require '../scripts/util/cursor_cache'
 
 
+logIterator = (iterator) ->
+  console.log value while ({done, value} = iterator.next()) and not done
 
 describe 'cache', ->
 
@@ -69,6 +71,20 @@ describe 'cache', ->
       assert cache.get(cursor.path) is undefined for cursor in cleared
       assert cache.get(cursor.path) is cursor for cursor in uncleared
 
+    it 'should prune unnecessary cursors', ->
+      c1 = path: ['a', 'b', 'c']
+      cache.store c1
+
+      assert cache.root.size is 1
+      assert cache.root.get('a').size is 1
+      assert cache.root.get('a').get('b').size is 1
+      assert cache.root.get('a').get('b').get('c').size is 1
+      assert cache.size() is 3
+
+      cache.clearPath ['a', 'b', 'c']
+
+      assert cache.root.size is 0
+      assert cache.size() is 0
 
   describe '#clearObject', ->
 
@@ -119,15 +135,13 @@ describe 'cache', ->
     it 'should count nodes in cache tree', ->
 
       cache.store path: ['a', 'b', 'c']
-      console.log "size is #{cache.size()}"
-      assert cache.size() is 4
+      assert cache.size() is 3
 
       cache.store path: ['a', 'b', 'd']
-      console.log "size is #{cache.size()}"
-      assert cache.size() is 5
+      assert cache.size() is 4
 
       cache.store path: ['a', 'e', 1]
-      assert cache.size() is 7
+      assert cache.size() is 6
 
       cache.store path: ['a', 'e', 2]
-      assert cache.size is 8
+      assert cache.size() is 7

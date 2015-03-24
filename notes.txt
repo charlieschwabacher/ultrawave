@@ -1,6 +1,11 @@
-just finished refactoring CursorCache to use arrays and maps, store cursor
-using a symbol and children directly.  next step is to write the cursor cache
-tests, including one proving that the cursor cache does not memory leak
+just finished refactoring cursor cache to return the final node from @clearPath,
+but there are bugs.. it looks like there is an issue where i expect an array
+as a node in teh cursor cache but am getting a map.  in the middle of figuring out why,
+specs failing
+
+
+browser requirements:
+Symbol, Map, Set, Websocket, RTCPeerConnection
 
 
 requirements:

@@ -70,13 +70,19 @@ module.exports = class CursorCache
 
 
   # recursively clear changes along a path
+  # return the last node along that path
 
   clearPath = (node, key, parent, path) ->
+    console.log 'clear path at path ' + path + ' opening'
     del node, cursorSymbol
-    key = path[0]
-    return unless (next = get node, key)?
-    del parent, key if empty node
-    clearPath next, key, node, path.slice 1
+    nextKey = path[0]
+    nextNode = get node, nextKey
+    final = clearPath nextNode, nextKey, node, path.slice 1 if nextNode?
+    del parent, key if parent? and empty node
+
+    console.log 'clear path at path ' + path + ' returning ' + if next? then final else node
+
+    if next? then final else node
 
   clearPath: (path) ->
     clearPath @root, null, null, path
@@ -94,25 +100,24 @@ module.exports = class CursorCache
     node
 
   clearObject: (path, obj) ->
-    @clearPath path
-
-    # at some point make the clear path call above just return the target
-    target = @root
-    for key in path
-      return unless (target = get target, key)?
-
+    target = @clearPath path
     clearObject target, null, null, obj
 
 
   # clear certain elements in an array by index, shifting following elements
 
   spliceArray: (path, start, deleteCount, addCount) ->
-    @clearPath path
+    console.log 'splice array called'
+    console.log arguments
+    console.log path
 
-    # at some point make the clear path call above just return the target
-    target = @root
-    for key in path
-      return unless (target = get target, key)?
+    target = @clearPath path
+
+    console.log target
+    console.log target.size
+    console.log @data()
+    i = target.keys()
+    console.log(value) while ({done, value} = i.next()) and not done
 
     unless target instanceof Array
       throw new Error 'CursorCache attempted spliceArray on non array'
@@ -126,22 +131,21 @@ module.exports = class CursorCache
     return 0 unless node?
 
     if node instanceof Map
-
       node.size +
-      (if node.has(cursorSymbol) then 0 else 1) +
-      (
-        for kv of node.entries()
-          console.log kv
-          [key, child] = kv
-          if key is cursorSymbol
-            0
-          else
-            size child
-      ).reduce ((memo, num) -> memo + num), 0
+      (if node.has cursorSymbol then -1 else 0) +
+      do ->
+        keys = node.keys()
+        result = 0
+        while ({done, value} = keys.next()) and not done
+          if value isnt cursorSymbol
+            result += size node.get value
+        result
     else
-      1 + node.reduce (memo, node) ->
-        size node
+      node.reduce (memo, child) ->
+        if child?
+        then memo + 1 + size child
+        else memo
       , 0
 
-  size: -> 1 + size @root
+  size: -> size @root
 
