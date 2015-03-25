@@ -69,8 +69,8 @@ module.exports = class CursorCache
     set target, cursorSymbol, cursor
 
 
-  # recursively clear changes along a path
-  # return the last node along that path
+  # recursively clear changes along a path, pruning nodes as stack unwinds
+  # return the last node along the path
 
   clearPath = (node, key, parent, path) ->
     return unless node?
@@ -91,7 +91,7 @@ module.exports = class CursorCache
     clearPath @root, null, null, path
 
 
-  # recursively clear changes made by merge
+  # recursively clear all paths on an object
 
   clearObject = (node, key, parent, changes) ->
     for k of changes
@@ -100,11 +100,10 @@ module.exports = class CursorCache
         clearObject child, node, k, changes[k]
         del parent, key if parent? and empty child
 
-    node
-
   clearObject: (path, obj) ->
     target = @clearPath path
     return unless target?
+
     clearObject target, null, null, obj
 
 
