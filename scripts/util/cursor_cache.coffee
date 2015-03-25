@@ -73,16 +73,11 @@ module.exports = class CursorCache
   # return the last node along that path
 
   clearPath = (node, key, parent, path) ->
-    console.log 'clear path at path ' + path + ' opening'
     del node, cursorSymbol
     nextKey = path[0]
     nextNode = get node, nextKey
-    final = clearPath nextNode, nextKey, node, path.slice 1 if nextNode?
+    clearPath nextNode, nextKey, node, path.slice 1 if nextNode?
     del parent, key if parent? and empty node
-
-    console.log 'clear path at path ' + path + ' returning ' + if next? then final else node
-
-    if next? then final else node
 
   clearPath: (path) ->
     clearPath @root, null, null, path
@@ -100,24 +95,25 @@ module.exports = class CursorCache
     node
 
   clearObject: (path, obj) ->
-    target = @clearPath path
+    @clearPath path
+
+    # at some point make the clear path call above just return the target
+    target = @root
+    for key in path
+      return unless (target = get target, key)?
+
     clearObject target, null, null, obj
 
 
   # clear certain elements in an array by index, shifting following elements
 
   spliceArray: (path, start, deleteCount, addCount) ->
-    console.log 'splice array called'
-    console.log arguments
-    console.log path
+    @clearPath path
 
-    target = @clearPath path
-
-    console.log target
-    console.log target.size
-    console.log @data()
-    i = target.keys()
-    console.log(value) while ({done, value} = i.next()) and not done
+    # at some point make the clear path call above just return the target
+    target = @root
+    for key in path
+      return unless (target = get target, key)?
 
     unless target instanceof Array
       throw new Error 'CursorCache attempted spliceArray on non array'
