@@ -73,11 +73,19 @@ module.exports = class CursorCache
   # return the last node along that path
 
   clearPath = (node, key, parent, path) ->
+    return unless node?
     del node, cursorSymbol
-    nextKey = path[0]
-    nextNode = get node, nextKey
-    clearPath nextNode, nextKey, node, path.slice 1 if nextNode?
+
+    if path.length > 0
+      nextKey = path[0]
+      nextNode = get node, nextKey
+      result = clearPath nextNode, nextKey, node, path.slice 1
+    else
+      result = node
+
     del parent, key if parent? and empty node
+
+    result
 
   clearPath: (path) ->
     clearPath @root, null, null, path
@@ -95,25 +103,16 @@ module.exports = class CursorCache
     node
 
   clearObject: (path, obj) ->
-    @clearPath path
-
-    # at some point make the clear path call above just return the target
-    target = @root
-    for key in path
-      return unless (target = get target, key)?
-
+    target = @clearPath path
+    return unless target?
     clearObject target, null, null, obj
 
 
   # clear certain elements in an array by index, shifting following elements
 
   spliceArray: (path, start, deleteCount, addCount) ->
-    @clearPath path
-
-    # at some point make the clear path call above just return the target
-    target = @root
-    for key in path
-      return unless (target = get target, key)?
+    target = @clearPath path
+    return unless target?
 
     unless target instanceof Array
       throw new Error 'CursorCache attempted spliceArray on non array'
