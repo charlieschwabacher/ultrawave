@@ -4,7 +4,8 @@ MapSet = require '../scripts/util/map_set'
 WebSocketServer = ws.Server
 
 
-getId = (cb) -> crypto.randomBytes 16, (ex, buff) -> cb buff.toString 'base64'
+getId = (cb) -> crypto.randomBytes 8, (ex, buff) ->
+  cb buff.toString('base64').replace('/','-').replace('+', '_')
 
 module.exports = class WSServer
 
@@ -16,15 +17,15 @@ module.exports = class WSServer
     @wss.on 'connection', (ws) =>
       getId (id) =>
         @sockets.set id, ws
-        @trigger id, 'open'
+        @trigger 'open', id
 
         ws.addEventListener 'close', (e) =>
           @sockets.delete id
-          @trigger id, 'close'
+          @trigger 'close', id
 
         ws.addEventListener 'message', (e) =>
           [type, payload] = JSON.parse e.data
-          @trigger id, type, payload
+          @trigger type, id, payload
 
   on: (type, callback) ->
     @handlers.add type, callback

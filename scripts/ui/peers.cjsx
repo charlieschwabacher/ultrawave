@@ -7,8 +7,8 @@ module.exports = React.createClass
   displayName: 'Peers'
 
   propTypes:
-    id: React.PropTypes.number.isRequired
-    peers: React.PropTypes.arrayOf(React.PropTypes.number)
+    id: React.PropTypes.string.isRequired
+    peers: React.PropTypes.arrayOf(React.PropTypes.string)
 
   render: ->
     <div className='peers'>

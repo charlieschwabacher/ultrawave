@@ -5,7 +5,7 @@ module.exports = React.createClass
   displayName: 'avatar'
 
   propTypes:
-    user: React.PropTypes.number.isRequired
+    user: React.PropTypes.string.isRequired
     default: React.PropTypes.string
 
   getDefaultProps: ->

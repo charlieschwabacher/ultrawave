@@ -25,6 +25,7 @@ module.exports = React.createClass
     messages: React.PropTypes.instanceOf(MapArray).isRequired
     addMessage: React.PropTypes.func.isRequired
 
+
   getInitialState: ->
     currentRoom: 'lobby'
 

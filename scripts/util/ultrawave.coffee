@@ -27,7 +27,6 @@ module.exports = class Ultrawave
     start: Symbol()
     join: Symbol()
     peer: Symbol()
-    peer: Symbol()
 
   constructor: (url) ->
     @ws = new WS url
@@ -42,7 +41,7 @@ module.exports = class Ultrawave
     addDataChannel = (room, id, dataChannel) =>
       @channels.set room, id, dataChannel
 
-      dataChannel.addEventListener 'close', ->
+      dataChannel.addEventListener 'close', =>
         @channels.delete room, id
 
       dataChannel.addEventListener 'message', (e) =>
@@ -53,7 +52,7 @@ module.exports = class Ultrawave
     addPeerConnection = (room, id, connection) =>
       @connections.set room, id, connection
 
-      connection.addEventListener 'signalingstatechange', (e) ->
+      connection.addEventListener 'signalingstatechange', (e) =>
         @connections.delete room, id if connection.signalingState is 'closed'
 
 
@@ -71,6 +70,7 @@ module.exports = class Ultrawave
 
 
     @ws.on 'start', (id) =>
+      log 'ws started'
       @id = id
       @trigger @events.start, this
 
@@ -136,18 +136,43 @@ module.exports = class Ultrawave
       connection.addIceCandidate candidate
 
 
-
-  join: (room) ->
+  attemptJoin = (action, room, success, failure) ->
     return if @rooms.has room
 
-    @ws.send 'join', room
+    @ws.send action, room
 
-    @rooms.add room
+    onSuccess = (subjectRoom) =>
+      return unless subjectRoom is room
+      @ws.off action, onSuccess
+      @ws.off "#{action} failed", onFailure
+      @rooms.add room
+      @trigger @events.join, room
+      success?()
 
-    @trigger @events.join, room
+    onFailure = (subjectRoom) =>
+      return unless subjectRoom is room
+      @ws.off action, onSuccess
+      @ws.off "#{action} failed", onFailure
+      failure?()
+
+    @ws.on action, onSuccess
+    @ws.on "#{action} failed", onFailure
 
 
-  leave: (room) ->
+  create: (room, success, failure) ->
+    attemptJoin.apply this, ['create', room, success, failure]
+
+
+  join: (room, success, failure) ->
+    attemptJoin.apply this, ['join', room, success, failure]
+
+
+  joinOrCreate: (room, success) ->
+    create = => @create room, success, join
+    do join = => @join room, success, create
+
+
+  leave: (room, success, failure) ->
     return unless @rooms.has room
 
     @ws.send 'leave', room

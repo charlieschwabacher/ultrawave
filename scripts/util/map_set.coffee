@@ -24,4 +24,7 @@ module.exports = class MapSet
       @map.delete key
 
   has: (key, value) ->
-    @map.get(key)?.has value
+    if arguments.length is 1
+      @map.has key
+    else
+      @map.get(key)?.has value

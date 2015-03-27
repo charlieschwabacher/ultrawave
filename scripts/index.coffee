@@ -23,11 +23,8 @@ render = ->
 
 window.uw = new Ultrawave 'ws://localhost:3002'
 
-uw.on 'start', ->
-  uw.join 'lobby'
-  render()
-
-uw.on 'peer', render
-uw.on 'join', render
-uw.on 'leave', render
+uw.on uw.events.start, -> uw.joinOrCreate 'lobby'
+uw.on uw.events.peer, render
+uw.on uw.events.join, render
+uw.on uw.events.leave, render
 uw.on 'message', addMessage

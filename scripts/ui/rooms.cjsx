@@ -48,7 +48,7 @@ module.exports = React.createClass
         onClick={
           ->
             r = prompt 'Join room:'
-            uw.join r if r
+            uw.joinOrCreate r if r
         }
       >
         +

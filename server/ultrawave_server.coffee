@@ -10,6 +10,7 @@ module.exports = class UltrawaveServer
 
 
   constructor: (port) ->
+    log "starting ultrawave server on port #{port}"
 
     @wss = new WSServer {port}
 
@@ -28,22 +29,35 @@ module.exports = class UltrawaveServer
     @wss.on 'close', (id) =>
       log "closed connection to #{id}"
 
-      @memberships.get(id).forEach (room) =>
+      @memberships.get(id)?.forEach (room) =>
         @rooms.delete room, id
 
       @memberships.delete id
 
 
+    @wss.on 'create', (id, room) =>
+      if @rooms.has room
+        log "client #{id} failed to create #{room}"
+        @wss.send id, 'create failed', room
+      else
+        log "client #{id} created #{room}"
+        @memberships.add id, room
+        @rooms.add room, id
+        @wss.send id, 'create', room
+
+
     @wss.on 'join', (id, room) =>
-      log "client #{id} joined #{room}"
-
-      @rooms.get(room)?.forEach (peer) =>
-        log "requsting offer from #{peer} in #{room}"
-        @wss.send peer, 'request offer', {room, from: id}
-
-      @memberships.add id, room
-      @rooms.add room, id
-
+      if peers = @rooms.get room
+        log "client #{id} joined #{room}"
+        peers.forEach (peer) =>
+          log "requsting offer from #{peer} in #{room}"
+          @wss.send peer, 'request offer', {room, from: id}
+        @memberships.add id, room
+        @rooms.add room, id
+        @wss.send id, 'join', room
+      else
+        log "client #{id} failed to join #{room}"
+        @wss.send id, 'join failed', room
 
     @wss.on 'leave', (id, room) =>
       log "client #{id} left #{room}"
@@ -69,6 +83,7 @@ module.exports = class UltrawaveServer
 
 
   stop: ->
+    log 'stopping ultrawave server'
     @wss.close()
 
 
