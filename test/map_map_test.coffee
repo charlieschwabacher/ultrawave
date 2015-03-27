@@ -3,7 +3,7 @@ MapMap = require '../scripts/util/map_map'
 
 describe 'MapMap', ->
 
-  it 'should set and get', ->
+  it 'should set, has, and get', ->
     mapMap = new MapMap
 
     assert not mapMap.has 'a', 'b'

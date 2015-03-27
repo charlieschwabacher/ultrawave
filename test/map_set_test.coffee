@@ -3,7 +3,7 @@ MapSet = require '../scripts/util/map_set'
 
 describe 'MapSet', ->
 
-  it 'should set and get', ->
+  it 'should add, has, and delete', ->
     mapSet = new MapSet
 
     assert not mapSet.has 'a', 1

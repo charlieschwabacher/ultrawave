@@ -1,15 +1,13 @@
 MapSet = require './map_set'
 
 
-__missing = Symbol 'missing'
+missingSymbol = Symbol()
 
 
 module.exports = class VectorClock
 
-  @__missing: __missing
-
   constructor: (@id, clock) ->
-    @[__missing] = new MapSet
+    @[missingSymbol] = new MapSet
     @[key] = value for key, value of clock
     @[@id] ||= 0
 
@@ -26,10 +24,10 @@ module.exports = class VectorClock
         @[id] = tick
 
       # keep track of missing updates
-      @[__missing].delete id, tick
+      @[missingSymbol].delete id, tick
       if tick - (latest or 0) > 1
         for i in [(latest + 1)...tick]
-          @[__missing].add id, i
+          @[missingSymbol].add id, i
 
   laterThan: (clock) ->
     later = false
@@ -48,4 +46,4 @@ module.exports = class VectorClock
       @id < clock.id
 
   applied: (id, tick) ->
-    @[id] >= tick and not @[__missing].has id, tick
+    @[id] >= tick and not @[missingSymbol].has id, tick

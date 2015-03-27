@@ -48,10 +48,10 @@ reloadServer = ->
     delete require.cache[k] for k, v of require.cache
 
   try
-    ultrawaveServer = new (require './server/ultrawave_server')
+    ultrawaveServer = new (require './server/ultrawave_server') 3002
   catch e
     console.log "ERROR LOADING SERVER"
-    console.log e
+    console.log e.stack
 
 
 # build javascript assets

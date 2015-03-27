@@ -19,6 +19,15 @@ module.exports = class Ultrawave
   configuration:
     iceServers: [url: 'stun:stun.l.google.com:19302']
 
+  # use symbols for event types to prevent the possibility that they could clash
+  # with message types send by peers
+  events:
+    open: Symbol()
+    close: Symbol()
+    start: Symbol()
+    join: Symbol()
+    peer: Symbol()
+    peer: Symbol()
 
   constructor: (url) ->
     @ws = new WS url
@@ -38,7 +47,7 @@ module.exports = class Ultrawave
 
       dataChannel.addEventListener 'message', (e) =>
         [type, payload] = JSON.parse e.data
-        @handlers.get(type)?.forEach (handler) -> handler room, id, payload
+        @trigger type, room, id, payload
 
 
     addPeerConnection = (room, id, connection) =>
@@ -52,18 +61,18 @@ module.exports = class Ultrawave
     @ws.on 'open', =>
       log 'ws opened'
       @open = true
-      @handlers.get('open')?.forEach (handler) -> handler this
+      @trigger @events.open, this
 
 
     @ws.on 'close', =>
       log 'ws closed'
       @open = false
-      @handlers.get('close')?.forEach (handler) -> handler this
+      @trigger @events.close, this
 
 
     @ws.on 'start', (id) =>
       @id = id
-      @handlers.get('start')?.forEach (handler) -> handler this
+      @trigger @events.start, this
 
 
     @ws.on 'request offer', ({room, from}) =>
@@ -75,7 +84,7 @@ module.exports = class Ultrawave
 
       dataChannel.addEventListener 'open', =>
         log 'data channel opened to peer'
-        @handlers.get('peer')?.forEach (handler) -> handler room, from
+        @trigger @events.peer, room, from
 
       connection.addEventListener 'icecandidate', (e) =>
         if e.candidate?
@@ -98,7 +107,7 @@ module.exports = class Ultrawave
       connection.addEventListener 'datachannel', (e) =>
         log 'data channel opened by peer'
         addDataChannel room, from, e.channel
-        @handlers.get('peer')?.forEach (handler) -> handler room, from
+        @trigger @events.peer, room, from
 
       connection.addEventListener 'icecandidate', (e) =>
         if e.candidate?
@@ -135,7 +144,7 @@ module.exports = class Ultrawave
 
     @rooms.add room
 
-    @handlers.get('join')?.forEach (handler) -> handler room
+    @trigger @events.join, room
 
 
   leave: (room) ->
@@ -148,7 +157,7 @@ module.exports = class Ultrawave
     @connections.delete room
     @channels.delete room
 
-    @handlers.get('leave')?.forEach (handler) -> handler room
+    @trigger @events.leave, room
 
 
   on: (type, callback) ->
@@ -162,8 +171,19 @@ module.exports = class Ultrawave
       @handlers.delete type
 
 
+  trigger: (type, args...) ->
+    @handlers.get(type)?.forEach (handler) -> handler.apply null, args
+
+
   send: (room, type, payload) ->
     message = JSON.stringify [type, payload]
     @channels.get(room)?.forEach (channel) -> channel.send message
+
+
+  close: ->
+    @rooms.forEach (room) ->
+      @connections.get(room).forEach (connection) ->
+        connection.close()
+
 
 

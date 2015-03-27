@@ -3,7 +3,7 @@ MapArray = require '../scripts/util/map_array'
 
 describe 'MapArray', ->
 
-  it 'should get and push', ->
+  it 'should push and get', ->
     MapArray = new MapArray
 
     assert not MapArray.get('a')?

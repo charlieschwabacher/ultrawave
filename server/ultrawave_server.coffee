@@ -12,7 +12,11 @@ module.exports = class UltrawaveServer
   constructor: (port) ->
 
     @wss = new WSServer {port}
+
+    # map room names to sets of peer ids
     @rooms = new MapSet
+
+    # map peer ids to sets of room names
     @memberships = new MapSet
 
 

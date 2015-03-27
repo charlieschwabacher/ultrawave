@@ -6,15 +6,11 @@ module.exports = class WS
     @ws = new WebSocket url
     @handlers = new MapSet
 
-    @ws.addEventListener 'open', =>
-      @handlers.get('open')?.forEach (handler) -> handler()
-
-    @ws.addEventListener 'close', =>
-      @handlers.get('close')?.forEach (handler) -> handler()
-
+    @ws.addEventListener 'open', => @trigger 'open'
+    @ws.addEventListener 'close', => @trigger 'close'
     @ws.addEventListener 'message', (e) =>
       [type, payload] = JSON.parse e.data
-      @handlers.get(type)?.forEach (handler) -> handler payload
+      @trigger type, payload
 
   on: (type, callback) ->
     @handlers.add type, callback
@@ -22,5 +18,11 @@ module.exports = class WS
   off: (type, callback) ->
     @handlers.delete type, callback
 
+  trigger: (type, args...) ->
+    @handlers.get(type)?.forEach (handler) -> handler.apply null, args
+
   send: (type, payload) ->
     @ws.send JSON.stringify [type, payload]
+
+  close: ->
+    @ws.close()

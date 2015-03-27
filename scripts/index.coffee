@@ -1,5 +1,5 @@
 React = require 'react'
-Ultrawave = require './ultrawave'
+Ultrawave = require './util/ultrawave'
 App = require './ui/app'
 MapArray = require './util/map_array'
 
