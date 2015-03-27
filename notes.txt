@@ -2,25 +2,19 @@ browser requirements:
 Symbol, Map, Set, Websocket, RTCPeerConnection
 
 
-Requirements:
-- data must be eventually consistent between peers
-- messages may be delivered out of order
-- messages may be lost or delivered multiple times
-
-
 When a peer connects to the server
 - the server responds with 'start' and an id for the peer
 
 
 When a peer shares a document
 - the peer sends a 'create' message to server with a requested room name
-- if the name is in use, the server responds with 'create failed' and the room name
+- if the name is in use, server responds with 'create failed' and the room
 - otherwise the server creates the room, responds with 'created'
 
 
 When a peer requests an existing document
 - the peer sends a 'join' message to the server with the room name
-- if the room does not exist, the server responds with 'join failed' and the room name
+- if the room does not exist, server responds with 'join failed' and the room
 - otherwise, server sends 'request offer' messages to exiting peers in the room
 - the server sends a 'joined' message to the requesting peer
 - the existing peers create offers, send 'offer' messages to the server w/ sdps
