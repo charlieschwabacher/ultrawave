@@ -5,10 +5,11 @@ directory = new Map
 peerId = 0
 
 
+
 EventTarget =
 
   addEventListener: (event, callback) ->
-    @handlers ||= new MapSat
+    @handlers ||= new MapSet
     @handlers.add event, callback
 
   removeEventListener: (event, callback) ->
@@ -24,37 +25,64 @@ class RTCPeerConnection
 
   constructor: (configuration) ->
     @signalingState = 'stable'
-
     @id = peerId += 1
     @targetId = null
-
-    @directory.set @id, this
+    @dataChannel = new RTCDataChannel this
+    directory.set @id, this
 
   createDataChannel: (name) ->
-    dc = new RTCDataChannel this
-    directory.get(@targetId).trigger
+    @dataChannel
 
   createOffer: (cb) ->
-    setTimeout => cb @id
+    setTimeout => cb new RTCSessionDescription sdp: @id, type: 'offer'
 
   createAnswer: (cb) ->
-    setTimeout => cb @id
+    setTimeout => cb new RTCSessionDescription sdp: @id, type: 'answer'
 
   setLocalDescription: (localDescription, cb) ->
     setTimeout =>
-      cb()
+      if @signalingState is 'stable'
+        @signalingState = 'have-local-offer'
+      else
+        @signalingState = 'stable'
+        @trigger 'icecandidate', {candidate: @id}
+
+      @trigger 'signalingstatechange'
+
+      cb?()
 
   setRemoteDescription: (remoteDescription, cb) ->
     setTimeout =>
-      @targetId = remoteDescription.id
-      cb()
+      @targetId = remoteDescription.sdp
+
+      if @signalingState is 'stable'
+        @signalingState = 'have-remote-offer'
+      else
+        @signalingState = 'stable'
+        @trigger 'icecandidate', {candidate: @id}
+
+      @trigger 'signalingstatechange'
+
+      cb?()
 
   addIceCandidate: (candidate, cb) ->
-
+    setTimeout =>
+      @trigger 'datachannel', channel: @dataChannel
+      setTimeout =>
+        @dataChannel.trigger 'open'
+      cb?()
 
   close: ->
     @signalingState = 'closed'
-    @directory.delete @id, this
+    @trigger 'signalingstatechange'
+    @dataChannel.trigger 'close'
+    target = directory.get @targetId
+    target.signalingState = 'closed'
+    target.trigger 'signalingstatechange'
+    target.dataChannel.trigger 'close'
+    directory.delete @id
+    directory.delete @targetId
+
 
 
 class RTCDataChannel
@@ -62,16 +90,23 @@ class RTCDataChannel
 
   constructor: (@connection) ->
 
+  send: (data) ->
+    target = directory.get(@connection.targetId).dataChannel
+    target.trigger 'message', {data}
+
 
 
 class RTCSessionDescription
 
-  constructor: (configuration) ->
+  constructor: ({sdp, type}) ->
+    @sdp = sdp
+    @type = type
 
 
 class RTCIceCandidate
 
-  constructor: (candidate) ->
+  constructor: ->
+
 
 
 

@@ -183,7 +183,7 @@ module.exports = class Ultrawave
     do join = => @join room, success, create
 
 
-  leave: (room, success, failure) ->
+  leave: (room) ->
     return unless @rooms.has room
 
     @ws.send 'leave', room
@@ -217,8 +217,9 @@ module.exports = class Ultrawave
 
 
   close: ->
-    @rooms.forEach (room) ->
-      @connections.get(room).forEach (connection) ->
+    @ws.close()
+    @rooms.forEach (room) =>
+      @connections.get(room)?.forEach (connection) ->
         connection.close()
 
 

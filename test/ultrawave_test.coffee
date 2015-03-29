@@ -23,19 +23,27 @@ Ultrawave::shouldSend = (expectedType, expectedPaylod, done) ->
     assert.equal payload, expectedPaylod
     done()
 
-UltrawaveServer::shouldSend = (expectedId, expectedType, expectedPaylod, done) ->
-  @wss.send = (id, type, payload) ->
-    assert.equal id, expectedId
-    assert.equal type, expectedType
-    assert.equal payload, expectedPaylod
-    done()
+UltrawaveServer::shouldSend = (
+  (expectedId, expectedType, expectedPayload, done) ->
+    @wss.send = (id, type, payload) ->
+      assert.equal id, expectedId
+      assert.equal type, expectedType
+      assert.equal payload, expectedPayload
+      done()
+)
+
+setupRoom = (peers, roomName, callback) ->
+  remainingPeers = peers.length * (peers.length - 1)
+  peers.forEach (peer) ->
+    peer.on events.start, -> peer.joinOrCreate roomName
+    peer.on events.peer, -> callback() if (remainingPeers -= 1) is 0
 
 
 describe 'Ultrawave', ->
 
   describe 'when a peer connects to a server', ->
 
-    it 'the peer should trigger an open event and set its open property', (done) ->
+    it 'the peer should trigger an open event and set open property', (done) ->
       server = new UltrawaveServer port += 1
       client = new Ultrawave "ws:localhost:#{port}"
       assert client.open is false
@@ -182,41 +190,98 @@ describe 'Ultrawave', ->
 
   describe 'when a peer sends a message in a room', ->
 
-    it 'the peers should each receive the message and trigger handlers', (done) ->
+    it 'the peers should each receive the message and trigger events', (done) ->
       server = new UltrawaveServer port += 1
-      clients = [1..3].map -> new Ultrawave "ws:localhost:#{port}"
+      peers = [1..3].map -> new Ultrawave "ws:localhost:#{port}"
+      setupRoom peers, 'lobby', ->
 
-      # start after all clients have joined 'lobby'
-      ready = 0
-      clients.forEach (client, i) ->
-        client.on events.start, -> client.joinOrCreate 'lobby'
-        client.on events.join, ->
-          console.log 'join'
-          start() if (ready += 1) is clients.length
-
-      # client at index zero sends a message, all other clients should receive it
-      start = ->
-        console.log 'starting!'
-        received = 0
-        clients.slice(1).forEach (client) ->
-          client.on 'message', (room, id, payload) ->
+        # first peer sends a message, all others should receive it
+        remainingMessages = peers.length - 1
+        peers.slice(1).forEach (peer) ->
+          peer.on 'message', (room, id, payload) ->
             assert.equal room, 'lobby'
-            assert.equal id, clients[0].id
+            assert.equal id, peers[0].id
             assert.equal payload, 'testing'
-            done() if (recevied += 1) is clients.length - 1
+            done() if (remainingMessages -= 1) is 0
 
-        clients[0].send 'lobby', 'message', 'testing'
-
-
-  # describe 'when a peer leaves a room', ->
-
-  #   it 'the server should remove the user from its list of room members', (done) ->
-
-  #   it 'the peers should clean up their closed connections', (done) ->
+        peers[0].send 'lobby', 'message', 'testing'
 
 
-  # describe 'when a peer disconnects from a server', ->
+  describe 'when a peer leaves a room', ->
 
-  #   it 'the server should clean up references to the user', (done) ->
+    it 'the server should remove the user from list of room members', (done) ->
+      server = new UltrawaveServer port += 1
+      client = new Ultrawave "ws:localhost:#{port}"
+      server.rooms.add 'lobby', 'abcd'
+      client.on events.start, ->
+        client.join 'lobby', ->
+          assert server.rooms.has 'lobby', client.id
+          assert server.memberships.has client.id, 'lobby'
+          client.leave 'lobby'
 
-  #   it 'the peers should clean up their closed connections', (done) ->
+          # we don't have a callback so set a 10ms timeout here to wait for
+          # ws communication
+          setTimeout ->
+            assert not server.rooms.has 'lobby', client.id
+            assert not server.memberships.has client.id, 'lobby'
+            assert server.rooms.has 'lobby', 'abcd'
+            done()
+          , 10
+
+    describe 'when the room becomes empty', ->
+
+      it 'the server should clean up references to the room', (done) ->
+        server = new UltrawaveServer port += 1
+        client = new Ultrawave "ws:localhost:#{port}"
+        assert not server.rooms.has 'lobby'
+        client.on events.start, ->
+          client.create 'lobby', ->
+            assert server.rooms.has 'lobby'
+            client.leave 'lobby'
+
+            # we don't have a callback so set a 10ms timeout here to wait for
+            # ws communication
+            setTimeout ->
+              assert not server.rooms.has 'lobby'
+              done()
+            , 10
+
+    it 'the peers should clean up their closed connections', (done) ->
+      server = new UltrawaveServer port += 1
+      peers = [1..3].map -> new Ultrawave "ws:localhost:#{port}"
+      setupRoom peers, 'lobby', ->
+        peers.forEach (peer) ->
+          assert.equal peer.connections.get('lobby').size, 2
+        peers[0].leave 'lobby'
+
+        # we set timeout here to wait for p2p communication, because this is
+        # mocked we can just run on the next tick
+        setTimeout ->
+          peers.slice(1).forEach (peer) ->
+            assert.equal peer.connections.get('lobby').size, 1
+          done()
+
+
+  describe 'when a peer disconnects from a server', ->
+
+    it 'the server should clean up references to the user', (done) ->
+      server = new UltrawaveServer port += 1
+      client = new Ultrawave "ws:localhost:#{port}"
+      client.on events.start, ->
+        client.create 'lobby', ->
+          assert server.rooms.has 'lobby', client.id
+          assert server.memberships.has client.id
+          client.close()
+
+          # we don't have a callback so set a 10ms timeout here to wait for
+          # ws communication
+          setTimeout ->
+            assert not server.rooms.has 'lobby', client.id
+            assert not server.memberships.has client.id
+            done()
+          , 10
+
+    # it 'the peers should clean up their closed connections', (done) ->
+
+
+
