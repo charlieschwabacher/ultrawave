@@ -2,11 +2,14 @@ WSServer = require './ws_server'
 MapSet = require '../scripts/util/map_set'
 
 
-log = (message) -> console.log message
+log = (message) -> console.log message if UltrawaveServer.log
 
 
 
 module.exports = class UltrawaveServer
+
+
+  @log: true
 
 
   constructor: (port) ->
@@ -58,6 +61,7 @@ module.exports = class UltrawaveServer
       else
         log "client #{id} failed to join #{room}"
         @wss.send id, 'join failed', room
+
 
     @wss.on 'leave', (id, room) =>
       log "client #{id} left #{room}"

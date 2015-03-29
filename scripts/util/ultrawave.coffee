@@ -5,9 +5,19 @@ MapSet = require './map_set'
 MapMap = require './map_map'
 
 
-RTCPeerConnection = window.webkitRTCPeerConnection or window.mozRTCPeerConnection
-RTCSessionDescription = window.RTCSessionDescription or window.mozRTCSessionDescription
-RTCIceCandidate = window.RTCIceCandidate or window.mozRTCIceCandidate
+RTCPeerConnection = (
+  window.RTCPeerConnection or
+  window.webkitRTCPeerConnection or
+  window.mozRTCPeerConnection
+)
+RTCSessionDescription = (
+  window.RTCSessionDescription or
+  window.mozRTCSessionDescription
+)
+RTCIceCandidate = (
+  window.RTCIceCandidate or
+  window.mozRTCIceCandidate
+)
 
 
 log = (message) -> #console.log message
@@ -27,6 +37,7 @@ module.exports = class Ultrawave
     start: Symbol()
     join: Symbol()
     peer: Symbol()
+
 
   constructor: (url) ->
     @ws = new WS url
