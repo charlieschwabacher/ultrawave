@@ -6,6 +6,7 @@
     "build-status": "^1.0.15",
     "coffee-reactify": "^2.1.0",
     "coffee-script": "^1.8.0",
+    "decaffeinate": "^1.14.0",
     "envify": "^3.2.0",
     "gulp": "^3.8.9",
     "gulp-awspublish": "^1.0.2",

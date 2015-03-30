@@ -136,7 +136,7 @@ describe 'Ultrawave', ->
       client.join 'lobby'
 
 
-    describe 'and the room already exists', ->
+    describe 'and the room already exists,', ->
 
       it 'the server should send "join" with the room name', (done) ->
         server = new UltrawaveServer port += 1
@@ -172,7 +172,7 @@ describe 'Ultrawave', ->
         client.on events.open, ->
           client.join 'lobby', done
 
-    describe 'and the room does not yet exist', ->
+    describe 'and the room does not yet exist,', ->
 
       it 'the server should send "join failed" with the room name', (done) ->
         server = new UltrawaveServer port += 1
@@ -228,23 +228,24 @@ describe 'Ultrawave', ->
             done()
           , 10
 
-    describe 'when the room becomes empty', ->
+    describe 'and the room becomes empty,', ->
 
-      it 'the server should clean up references to the room', (done) ->
-        server = new UltrawaveServer port += 1
-        client = new Ultrawave "ws:localhost:#{port}"
-        assert not server.rooms.has 'lobby'
-        client.on events.start, ->
-          client.create 'lobby', ->
-            assert server.rooms.has 'lobby'
-            client.leave 'lobby'
+    it 'the server should clean up references to the room if the room
+        becomes empty', (done) ->
+      server = new UltrawaveServer port += 1
+      client = new Ultrawave "ws:localhost:#{port}"
+      assert not server.rooms.has 'lobby'
+      client.on events.start, ->
+        client.create 'lobby', ->
+          assert server.rooms.has 'lobby'
+          client.leave 'lobby'
 
-            # we don't have a callback so set a 10ms timeout here to wait for
-            # ws communication
-            setTimeout ->
-              assert not server.rooms.has 'lobby'
-              done()
-            , 10
+          # we don't have a callback so set a 10ms timeout here to wait for
+          # ws communication
+          setTimeout ->
+            assert not server.rooms.has 'lobby'
+            done()
+          , 10
 
     it 'the peers should clean up their closed connections', (done) ->
       server = new UltrawaveServer port += 1
@@ -281,7 +282,19 @@ describe 'Ultrawave', ->
             done()
           , 10
 
-    # it 'the peers should clean up their closed connections', (done) ->
+    it 'the peers should clean up their closed connections', (done) ->
+      server = new UltrawaveServer port += 1
+      peers = [1..3].map -> new Ultrawave "ws:localhost:#{port}"
+      setupRoom peers, 'lobby', ->
+        peers.forEach (peer) ->
+          assert.equal peer.connections.get('lobby').size, 2
+        peers[0].close()
 
+        # we set timeout here to wait for p2p communication, because this is
+        # mocked we can just run on the next tick
+        setTimeout ->
+          peers.slice(1).forEach (peer) ->
+            assert.equal peer.connections.get('lobby').size, 1
+          done()
 
 
