@@ -30,6 +30,6 @@ describe 'Wormhole', ->
     it 'the peer receiving request document should respond wiht \'document\',
         the current document, and its clock', ->
 
-    it 'the peer should send '
+    it 'the peer should send ', ->
 
-  describe ''
+  describe '', ->
