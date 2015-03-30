@@ -2,5 +2,9 @@ Ultrawave = require './ultrawave'
 Cursor = require './cursor'
 
 
-module.exports = class Wormhole
+module.exports =
+
+  create: (room, data, root) ->
+
+  join: (room, data, root) ->
 

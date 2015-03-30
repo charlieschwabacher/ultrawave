@@ -5,7 +5,9 @@ CursorCache = require '../scripts/util/cursor_cache'
 logIterator = (iterator) ->
   console.log value while ({done, value} = iterator.next()) and not done
 
-describe 'cache', ->
+
+
+describe 'CursorCache', ->
 
   initialData =
     a:

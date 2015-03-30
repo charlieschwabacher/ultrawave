@@ -2,6 +2,14 @@ browser requirements:
 Symbol, Map, Set, Websocket, RTCPeerConnection
 
 
+Data is represented as a 'document' - a tree structure contianing either arrays
+or hashes.  Changes are represented as a 'path' to the node to be modified, a
+method, and arguemnts.  Methods on hashes are 'set', 'delete', and 'merge', and
+methods on arrays are 'set', 'delete', and 'splice'.  Changes are sent between
+peers as json: ["change", [clock, method, ...arguments]]
+
+
+
 When a peer connects to the server
 - the server responds with 'start' and an id for the peer
 

@@ -39,7 +39,7 @@ setupRoom = (peers, roomName, callback) ->
     peer.on events.peer, -> callback() if (remainingPeers -= 1) is 0
 
 
-describe 'Ultrawave', ->
+describe 'Ultrawave:', ->
 
   describe 'when a peer connects to a server', ->
 

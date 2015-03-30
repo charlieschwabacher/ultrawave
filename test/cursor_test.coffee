@@ -23,34 +23,28 @@ describe 'Cursor', ->
 
 
 
-  describe 'inheritance', ->
-
-    it 'should inherit from an exposed class', ->
-      assert root instanceof Cursor.Cursor
+  it 'should inherit from an exposed class', ->
+    assert root instanceof Cursor.Cursor
 
 
-  describe 'constructor', ->
-
-    it 'should trigger the callback immediately', ->
-      count = 0
-      Cursor.create {}, -> count += 1
-      assert count is 1
+  it 'should trigger its callback immediately', ->
+    count = 0
+    Cursor.create {}, -> count += 1
+    assert count is 1
 
 
-  describe 'batching', ->
-
-    it 'should trigger a callback only once for multiple changes', (done) ->
-      root = null
-      count = 0
-      Cursor.create {}, (_root) ->
-        count += 1
-        root = _root
-      root.set 'a', 1
-      root.set 'b', 2
-      root.set 'c', 3
-      setTimeout ->
-        assert count is 2
-        done()
+  it 'should trigger a callback only once for multiple changes', (done) ->
+    root = null
+    count = 0
+    Cursor.create {}, (_root) ->
+      count += 1
+      root = _root
+    root.set 'a', 1
+    root.set 'b', 2
+    root.set 'c', 3
+    setTimeout ->
+      assert count is 2
+      done()
 
 
   describe '#get', ->
