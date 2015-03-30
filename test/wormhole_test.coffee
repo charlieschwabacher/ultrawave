@@ -9,8 +9,8 @@ assert = require 'assert'
 UltrawaveServer = require '../server/ultrawave_server'
 UltrawaveServer.log = false
 
-
 port = 5000
+
 
 
 setupRoom = (peers, roomName, callback) ->

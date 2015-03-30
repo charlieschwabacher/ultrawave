@@ -11,8 +11,8 @@ UltrawaveServer = require '../server/ultrawave_server'
 UltrawaveServer.log = false
 events = Ultrawave::events
 
-
 port = 5000
+
 
 
 # extend server and client classes with some expectation methods

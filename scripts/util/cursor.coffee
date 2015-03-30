@@ -14,7 +14,6 @@ module.exports =
     data = deepFreeze inputData
     cache = new CursorCache -> data
     pending = false
-
     changes = []
 
     update = (newData) ->
@@ -154,9 +153,8 @@ module.exports =
 
 
     # return a 'handle' to the cursor instance
-    cache: -> cache
     data: -> data
+    cache: -> cache
     pending: -> pending
-    clock: ->
-    changed: ->
+    changes: -> changes
 
