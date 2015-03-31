@@ -3,7 +3,9 @@ const deepMerge = require('./deep_merge')
 const CursorCache = require('./cursor_cache')
 
 module.exports = {
+
   Cursor: class Cursor {},
+
   create: function(inputData, onChange) {
     const cache = new CursorCache(() => data)
     let data = deepFreeze(inputData)
@@ -23,9 +25,33 @@ module.exports = {
       return newData
     }
 
+    const modifyAt = (fullPath, modifier) => {
+      const newData = Array.isArray(data) ? [] : {}
+      let target = newData
+
+      for (let k in data) target[k] = data[k]
+
+      for (let key of fullPath.slice(0, -1)) {
+        let updated = Array.isArray(target[key]) ? [] : {}
+        for (let k in data) updated[k] = target[k]
+        target[key] = updated
+        Object.freeze(target)
+        target = updated
+      }
+
+      const key = fullPath.slice(-1)[0]
+      const result = modifier(target, key)
+      Object.freeze(target)
+
+      update(newData)
+
+      return result
+    }
+
     const recordChange = (method, ...args) => {
       changes.push([method, args])
     }
+
 
     class Cursor extends module.exports.Cursor {
       constructor(path = []) {
@@ -43,36 +69,13 @@ module.exports = {
         return cursor
       }
 
-      get(path) {
+      get(path = []) {
         let target = data
         for (let key of this.path.concat(path)) {
           target = target[key]
           if (target == null) return undefined
         }
         return target
-      }
-
-      modifyAt(fullPath, modifier) {
-        const newData = Array.isArray(data) ? [] : {}
-        let target = newData
-
-        for (let k in data) target[k] = data[k]
-
-        for (let key in fullPath.slice(0, -1)) {
-          let updated = Array.isArray(target[key]) ? [] : {}
-          for (let k in data) updated[k] = target[k]
-          target[key] = updated
-          Object.freeze(target)
-          target = updated
-        }
-
-        const key = fullPath.slice(-1)[0]
-        const result = modifier(target, key)
-        Object.freeze(target)
-
-        update(newData)
-
-        return result
       }
 
       set(path, value) {
@@ -86,7 +89,7 @@ module.exports = {
 
         if (fullPath.length > 0) {
           cache.clearPath(fullPath)
-          this.modifyAt(fullPath, (target, key) => {
+          modifyAt(fullPath, (target, key) => {
             target[key] = deepFreeze(value)
           })
         } else {
@@ -96,14 +99,14 @@ module.exports = {
         return value
       }
 
-      delete(path) {
+      delete(path = []) {
         const fullPath = this.path.concat(path)
 
         recordChange('delete', fullPath)
 
         if (fullPath.length > 0) {
           cache.clearPath(fullPath)
-          this.modifyAt(fullPath, (target, key) => {
+          modifyAt(fullPath, (target, key) => {
             delete target[key]
           })
         } else {
@@ -118,7 +121,7 @@ module.exports = {
 
         cache.clearObject(this.path, newData)
         if (this.path.length > 0) {
-          return this.modifyAt(this.path, (target, key) => {
+          return modifyAt(this.path, (target, key) => {
             target[key] = deepMerge(target[key], deepFreeze(newData))
           })
         } else {
@@ -133,7 +136,7 @@ module.exports = {
 
         cache.spliceArray(fullPath, start, deleteCount, elements.length)
 
-        return this.modifyAt(fullPath, (target, key) => {
+        return modifyAt(fullPath, (target, key) => {
           const arr = target[key]
           if (!Array.isArray(arr)) throw new Error('can\'t splice non array')
           const updated = arr.slice(0)
@@ -181,5 +184,7 @@ module.exports = {
       pending: () => pending,
       changes: () => changes
     }
+
   }
+
 }
