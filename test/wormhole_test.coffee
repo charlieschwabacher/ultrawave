@@ -10,7 +10,7 @@ UltrawaveServer = require '../server/ultrawave_server'
 Wormhole = require '../scripts/util/wormhole'
 UltrawaveServer.log = false
 
-port = 5000
+port = 5500
 
 
 

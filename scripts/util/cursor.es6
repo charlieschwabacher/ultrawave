@@ -28,12 +28,12 @@ module.exports = {
     const modifyAt = (fullPath, modifier) => {
       const newData = Array.isArray(data) ? [] : {}
       let target = newData
-
       for (let k in data) target[k] = data[k]
 
       for (let key of fullPath.slice(0, -1)) {
-        let updated = Array.isArray(target[key]) ? [] : {}
-        for (let k in data) updated[k] = target[k]
+        const next = target[key]
+        const updated = Array.isArray(target[key]) ? [] : {}
+        for (let k in next) updated[k] = next[k]
         target[key] = updated
         Object.freeze(target)
         target = updated
