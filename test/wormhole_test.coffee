@@ -7,6 +7,7 @@ global.window = require './rtc_mocks'
 
 assert = require 'assert'
 UltrawaveServer = require '../server/ultrawave_server'
+Wormhole = require '../scripts/util/wormhole'
 UltrawaveServer.log = false
 
 port = 5000

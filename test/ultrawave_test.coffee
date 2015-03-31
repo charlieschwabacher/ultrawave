@@ -86,12 +86,11 @@ describe 'Ultrawave:', ->
           server.shouldSend client.id, 'create failed', 'lobby', done
           client.create 'lobby'
 
-      it 'the peer should run its failure callback', (done) ->
+      it 'the peer should return and reject a promise', (done) ->
         server = new UltrawaveServer port += 1
         client = new Ultrawave "ws:localhost:#{port}"
         server.rooms.map.set 'lobby', new Set
-        client.on events.open, ->
-          client.create 'lobby', (->), done
+        client.on events.open, -> client.create('lobby').catch done
 
 
     describe 'and the room does not yet exist', ->
@@ -107,7 +106,7 @@ describe 'Ultrawave:', ->
         server = new UltrawaveServer port += 1
         client = new Ultrawave "ws:localhost:#{port}"
         client.on events.open, ->
-          client.create 'lobby', ->
+          client.create('lobby').then ->
             assert client.rooms.has 'lobby'
             done()
 
@@ -124,7 +123,7 @@ describe 'Ultrawave:', ->
         server = new UltrawaveServer port += 1
         client = new Ultrawave "ws:localhost:#{port}"
         client.on events.open, ->
-          client.create 'lobby', done
+          client.create('lobby').then done
 
 
   describe 'when a peer attempts to join an existing room', ->
@@ -151,7 +150,7 @@ describe 'Ultrawave:', ->
         client = new Ultrawave "ws:localhost:#{port}"
         server.rooms.map.set 'lobby', new Set
         client.on events.open, ->
-          client.join 'lobby', ->
+          client.join('lobby').then ->
             assert client.rooms.has 'lobby'
             done()
 
@@ -170,7 +169,7 @@ describe 'Ultrawave:', ->
         client = new Ultrawave "ws:localhost:#{port}"
         server.rooms.map.set 'lobby', new Set
         client.on events.open, ->
-          client.join 'lobby', done
+          client.join('lobby').then done
 
     describe 'and the room does not yet exist,', ->
 
@@ -185,7 +184,7 @@ describe 'Ultrawave:', ->
         server = new UltrawaveServer port += 1
         client = new Ultrawave "ws:localhost:#{port}"
         client.on events.open, ->
-          client.join 'lobby', (->), done
+          client.join('lobby').catch done
 
 
   describe 'when a peer sends a message in a room', ->
@@ -214,7 +213,7 @@ describe 'Ultrawave:', ->
       client = new Ultrawave "ws:localhost:#{port}"
       server.rooms.add 'lobby', 'abcd'
       client.on events.start, ->
-        client.join 'lobby', ->
+        client.join('lobby').then ->
           assert server.rooms.has 'lobby', client.id
           assert server.memberships.has client.id, 'lobby'
           client.leave 'lobby'
@@ -236,7 +235,7 @@ describe 'Ultrawave:', ->
       client = new Ultrawave "ws:localhost:#{port}"
       assert not server.rooms.has 'lobby'
       client.on events.start, ->
-        client.create 'lobby', ->
+        client.create('lobby').then ->
           assert server.rooms.has 'lobby'
           client.leave 'lobby'
 
@@ -269,7 +268,7 @@ describe 'Ultrawave:', ->
       server = new UltrawaveServer port += 1
       client = new Ultrawave "ws:localhost:#{port}"
       client.on events.start, ->
-        client.create 'lobby', ->
+        client.create('lobby').then ->
           assert server.rooms.has 'lobby', client.id
           assert server.memberships.has client.id
           client.close()

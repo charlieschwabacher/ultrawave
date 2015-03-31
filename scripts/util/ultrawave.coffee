@@ -20,6 +20,7 @@ RTCIceCandidate = (
 )
 
 
+
 log = (message) -> #console.log message
 
 
@@ -158,29 +159,32 @@ module.exports = class Ultrawave
       @ws.off "#{action} failed", onFailure
       @rooms.add room
       @trigger @events.join, room
-      success?()
+      success()
 
     onFailure = (subjectRoom) =>
       return unless subjectRoom is room
       @ws.off action, onSuccess
       @ws.off "#{action} failed", onFailure
-      failure?()
+      failure()
 
     @ws.on action, onSuccess
     @ws.on "#{action} failed", onFailure
 
 
-  create: (room, success, failure) ->
-    attemptJoin.apply this, ['create', room, success, failure]
+  create: (room) ->
+    new Promise (resolve, reject) =>
+      attemptJoin.apply this, ['create', room, resolve, reject]
 
 
-  join: (room, success, failure) ->
-    attemptJoin.apply this, ['join', room, success, failure]
+  join: (room) ->
+    new Promise (resolve, reject) =>
+      attemptJoin.apply this, ['join', room, resolve, reject]
 
 
-  joinOrCreate: (room, success) ->
-    create = => @create room, success, join
-    do join = => @join room, success, create
+  joinOrCreate: (room) ->
+    new Promise (resolve) =>
+      create = => @create(room).then(resolve).catch join
+      do join = => @join(room).then(resolve).catch create
 
 
   leave: (room) ->

@@ -1,5 +1,5 @@
 browser requirements:
-Symbol, Map, Set, Websocket, RTCPeerConnection
+Promise, Symbol, Map, Set, Websocket, RTCPeerConnection
 
 
 Data is represented as a 'document' - a tree structure contianing either arrays
