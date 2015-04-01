@@ -6,31 +6,35 @@ const cursorSymbol = Symbol()
 
 
 function get(target, key) {
-  if target instanceof Map
-    target.get key
+  if (target instanceof Map)
+    return target.get(key)
   else
-    target[key]
+    return target[key]
 }
 
 function set(target, key, value) {
-  if target instanceof Map
-    target.set key, value
+  if (target instanceof Map)
+    target.set(key, value)
   else
     target[key] = value
+
+  return value
 }
 
 function del(target, key) {
-  if target instanceof Map
-    target.delete key
+  if (target instanceof Map)
+    target.delete(key)
   else
     target[key] = undefined
+
+  return true
 }
 
 function empty(target) {
-  if target instanceof Map
-    target.size is 0
+  if (target instanceof Map)
+    return target.size === 0
   else
-    target.length is 0 and not target[cursorSymbol]?
+    return target.length === 0 && target[cursorSymbol] == null
 }
 
 
@@ -55,17 +59,17 @@ function clearPath (node, key, parent, path) {
     del(parent, key)
   }
 
-  result
+  return result
 }
 
 // recursively clear all paths on an object
 
 function clearObject(node, key, parent, changes) {
-  for (k in changes) {
+  for (let k in changes) {
     const child = get(node, k)
     if (child != null) {
       del(child, cursorSymbol)
-      clearObject(child, node, k, changes[k])
+      clearObject(child, k, node, changes[k])
 
       if (parent != null && empty(child)) {
         del(parent, key)
@@ -81,14 +85,14 @@ function size(node) {
 
   if (node instanceof Map) {
     let result = 0
-    for (let [key, value] of node)
+    for (let [key, value] of node) {
       if (key !== cursorSymbol) {
         result += size(value)
       }
     }
-    return result + node.size + node.has(cursorSymbol) ? -1 : 0
+    return result + node.size + (node.has(cursorSymbol) ? -1 : 0)
   } else {
-    node.reduce((memo, child) => {
+    return node.reduce((memo, child) => {
       (child != null) ? memo + 1 + size(child) : memo
     }, 0)
   }
@@ -113,21 +117,21 @@ module.exports = class CursorCache {
 
   get(path) {
     let target = this.root
-    for (key of path) {
-      target = get target, key
+    for (let key of path) {
+      target = get(target, key)
       if (target == null) return undefined
     }
     return get(target, cursorSymbol)
   }
 
   store(cursor) {
-    let target = this.root, next
+    let target = this.root
     let dataTarget = this.data()
-    for (key of cursor.path) {
-      dataTarget = dataTarget?[key]
+    for (let key of cursor.path) {
+      dataTarget = (dataTarget == null) ? null : dataTarget[key]
       let next = get(target, key)
       if (next == null) {
-        next = (Array.isArray(dataTarget)) ? [] : new Map
+        next = Array.isArray(dataTarget) ? [] : new Map
         set(target, key, next)
       }
       target = next
@@ -136,7 +140,7 @@ module.exports = class CursorCache {
   }
 
   clearPath(path) {
-    clearPath(this.root, null, null, path)
+    return clearPath(this.root, null, null, path)
   }
 
   clearObject(path, obj) {

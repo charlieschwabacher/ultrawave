@@ -73,20 +73,20 @@ describe 'CursorCache', ->
       assert cache.get(cursor.path) is undefined for cursor in cleared
       assert cache.get(cursor.path) is cursor for cursor in uncleared
 
-    it 'should prune unnecessary cursors', ->
+    it 'should prune unnecessary nodes', ->
       c1 = path: ['a', 'b', 'c']
       cache.store c1
 
-      assert cache.root.size is 1
-      assert cache.root.get('a').size is 1
-      assert cache.root.get('a').get('b').size is 1
-      assert cache.root.get('a').get('b').get('c').size is 1
-      assert cache.size() is 3
+      assert.equal cache.root.size, 1
+      assert.equal cache.root.get('a').size, 1
+      assert.equal cache.root.get('a').get('b').size, 1
+      assert.equal cache.root.get('a').get('b').get('c').size, 1
+      assert.equal cache.size(), 3
 
       cache.clearPath ['a', 'b', 'c']
 
-      assert cache.root.size is 0
-      assert cache.size() is 0
+      assert.equal cache.root.size, 0
+      assert.equal cache.size(), 0
 
   describe '#clearObject', ->
 
@@ -99,14 +99,15 @@ describe 'CursorCache', ->
 
       cursors = [c1, c2, c3, c4, c5]
       cache.store cursor for cursor in cursors
-      assert cache.get(cursor.path) is cursor for cursor in cursors
+      assert.equal cache.get(cursor.path), cursor for cursor in cursors
 
       cache.clearObject ['a'], {b: {c: 1, d: 2, e: 3}}
 
       cleared = [c1, c2, c3, c4]
       uncleared = [c5]
-      assert cache.get(cursor.path) is undefined for cursor in cleared
-      assert cache.get(cursor.path) is cursor for cursor in uncleared
+
+      assert not cache.get(cursor.path)? for cursor in cleared
+      assert.equal cache.get(cursor.path), cursor for cursor in uncleared
 
 
   describe '#spliceArray', ->
@@ -147,3 +148,4 @@ describe 'CursorCache', ->
 
       cache.store path: ['a', 'e', 2]
       assert cache.size() is 7
+
