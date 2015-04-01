@@ -1,3 +1,7 @@
+something is up w/ es6 version of cursor causing intermittent failures, need to
+finish converting ultrawave, then server code.
+
+
 browser requirements:
 Promise, Symbol, Map, Set, Websocket, RTCPeerConnection
 

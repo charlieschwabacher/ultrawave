@@ -5,7 +5,7 @@ module.exports = class MapArray {
   }
 
   get(key) {
-    this.map.get(key)
+    return this.map.get(key)
   }
 
   push(key, value) {
@@ -14,6 +14,6 @@ module.exports = class MapArray {
       arr = []
       this.map.set(key, arr)
     }
-    arr.push(value)
+    return arr.push(value)
   }
 }

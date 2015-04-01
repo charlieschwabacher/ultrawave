@@ -5,7 +5,7 @@ module.exports = class MapSet {
   }
 
   get(key) {
-    this.map.get(key)
+    return this.map.get(key)
   }
 
   add(key, value) {
@@ -15,17 +15,20 @@ module.exports = class MapSet {
       this.map.set(key, set)
     }
 
-    set.add(value)
+    return set.add(value)
   }
 
   delete(key, value) {
     if (arguments.length === 1) {
-      this.map.delete(key)
+      return this.map.delete(key)
     } else {
       let set = this.map.get(key)
-      if (set) {
-        set.delete(value)
+      if (set == null) {
+        return false
+      } else {
+        let result = set.delete(value)
         if (set.size === 0) this.map.delete(key)
+        return result
       }
     }
   }

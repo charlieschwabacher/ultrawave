@@ -4,12 +4,12 @@ MapArray = require '../scripts/util/map_array'
 describe 'MapArray', ->
 
   it 'should push and get', ->
-    MapArray = new MapArray
+    mapArray = new MapArray
 
-    assert not MapArray.get('a')?
+    assert not mapArray.get('a')?
 
-    MapArray.push 'a', 1
-    assert.deepEqual MapArray.get('a'), [1]
+    mapArray.push 'a', 1
+    assert.deepEqual mapArray.get('a'), [1]
 
-    MapArray.push 'a', 2
-    assert.deepEqual MapArray.get('a'), [1, 2]
+    mapArray.push 'a', 2
+    assert.deepEqual mapArray.get('a'), [1, 2]

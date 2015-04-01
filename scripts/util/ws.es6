@@ -9,7 +9,7 @@ module.exports = class WS {
     this.ws.addEventListener('open', () => this.trigger('open'))
     this.ws.addEventListener('close', () => this.trigger('close'))
     this.ws.addEventListener('message', (e) => {
-      [type, payload] = JSON.parse(e.data)
+      const [type, payload] = JSON.parse(e.data)
       this.trigger(type, payload)
     })
   }
@@ -23,7 +23,7 @@ module.exports = class WS {
   }
 
   trigger(type, ...args) {
-    let handlers = this.handlers.get(type)
+    const handlers = this.handlers.get(type)
     if (handlers != null) {
       handlers.forEach((handler) => handler.apply(null, args))
     }

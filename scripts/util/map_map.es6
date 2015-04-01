@@ -1,7 +1,8 @@
 module.exports = class MapMap {
 
   constructor() {
-    @map = new Map
+    this.map = new Map
+  }
 
   get(key1, key2) {
     if (arguments.length === 1) {
@@ -19,17 +20,20 @@ module.exports = class MapMap {
       this.map.set(key1, map)
     }
 
-    map.set(key2, value)
+    return map.set(key2, value)
   }
 
   delete(key1, key2) {
     if (arguments.length === 1) {
-      this.map.delete(key1)
+      return this.map.delete(key1)
     } else {
       let map = this.map.get(key1)
-      if (map) {
-        map.delete(key2)
+      if (map == null) {
+        return false
+      } else {
+        let result = map.delete(key2)
         if (map.size === 0) this.map.delete(key1)
+        return result
       }
     }
   }

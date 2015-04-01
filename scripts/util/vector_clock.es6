@@ -9,19 +9,19 @@ module.exports = class VectorClock {
   constructor(id, clock) {
     this.id = id
     this[missingSymbol] = new MapSet
-    for (key in clock) this[key] = clock[key]
+    for (let key in clock) this[key] = clock[key]
     this[this.id] = this[this.id] || 0
   }
 
   increment() {
-    this[this.id] += 1
+    return this[this.id] += 1
   }
 
   update(clock) {
     for (let id in clock) {
       let tick = clock[id]
       let latest = this[id]
-      id = parseInt id
+      id = parseInt(id)
 
       if (latest) {
         this[id] = Math.max(latest, tick)
@@ -32,7 +32,7 @@ module.exports = class VectorClock {
       // keep track of missing updates
       this[missingSymbol].delete(id, tick)
       if (tick - (latest || 0) > 1) {
-        for (i in [(latest + 1)...tick]) {
+        for (let i = latest + 1; i < tick; i++) {
           this[missingSymbol].add(id, i)
         }
       }
@@ -40,8 +40,8 @@ module.exports = class VectorClock {
   }
 
   laterThan(clock) {
-    later = false
-    earlier = false
+    let later = false
+    let earlier = false
     for (let id in clock) {
       if (this[id] < clock[id]) {
         earlier = true
@@ -62,6 +62,6 @@ module.exports = class VectorClock {
   }
 
   applied(id, tick) {
-    this[id] >= tick && !this[missingSymbol].has(id, tick)
+    return this[id] >= tick && !this[missingSymbol].has(id, tick)
   }
 }
