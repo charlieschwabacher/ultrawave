@@ -4,13 +4,38 @@ const CursorCache = require('./cursor_cache')
 
 module.exports = {
 
+  // make a cursor superclass accessible for type checking
+
   Cursor: class Cursor {},
 
+
   create: function(inputData, onChange) {
-    const cache = new CursorCache(() => data)
+
+    // this is the master reference to data, any change will replace this object
+
     let data = deepFreeze(inputData)
+
+
+    // we use a cursor cache to ensure that any two cursors to the same object
+    // will be referentially equal
+
+    const cache = new CursorCache(() => data)
+
+
+    // when data changes, we queue queue only one update which runs after
+    // execution ends
+
     let pending = false
+
+
+    // we keep an array of batched changes which will be passed to the callback
+    // along with a cursor to the updated data
+
     let changes = []
+
+
+
+    // declare some private functions used by the Cursor class
 
     const update = (newData) => {
       data = newData
@@ -23,6 +48,10 @@ module.exports = {
         })
       }
       return newData
+    }
+
+    const recordChange = (method, ...args) => {
+      changes.push([method, args])
     }
 
     const modifyAt = (fullPath, modifier) => {
@@ -48,10 +77,9 @@ module.exports = {
       return result
     }
 
-    const recordChange = (method, ...args) => {
-      changes.push([method, args])
-    }
 
+
+    // we create a local cursor class w/ access to mutable reference to data
 
     class Cursor extends module.exports.Cursor {
       constructor(path = []) {
@@ -173,6 +201,8 @@ module.exports = {
       }
 
     }
+
+
 
     // perform callback one time to start
     onChange(new Cursor)

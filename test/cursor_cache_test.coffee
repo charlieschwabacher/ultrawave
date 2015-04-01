@@ -138,14 +138,14 @@ describe 'CursorCache', ->
     it 'should count nodes in cache tree', ->
 
       cache.store path: ['a', 'b', 'c']
-      assert cache.size() is 3
+      assert.equal cache.size(), 3
 
       cache.store path: ['a', 'b', 'd']
-      assert cache.size() is 4
+      assert.equal cache.size(), 4
 
       cache.store path: ['a', 'e', 1]
-      assert cache.size() is 6
+      assert.equal cache.size(), 6
 
       cache.store path: ['a', 'e', 2]
-      assert cache.size() is 7
+      assert.equal cache.size(), 7
 

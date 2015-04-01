@@ -9,7 +9,15 @@ module.exports = class Wormhole {
   }
 
   create(room, data, cb) {
+    this.ultrawave.create(
+      room,
+      () => {
 
+      },
+      () => {
+
+      }
+    )
   }
 
   join(room, cb) {

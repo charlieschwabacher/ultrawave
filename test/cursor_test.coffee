@@ -144,7 +144,7 @@ describe 'Cursor', ->
   describe '#unshift', ->
 
     it 'should prepend a value to the beginning of an array', ->
-      val = root.unshift ['a', 'e'], 0
+      root.unshift ['a', 'e'], 0
       assert.deepEqual root.get(['a', 'e']), [0, 1, 2, 3]
 
     it 'should throw an error if the target path does not contain an array', ->
@@ -166,7 +166,7 @@ describe 'Cursor', ->
 
     it 'should remove a value from the beginning of an array', ->
       val = root.shift ['a', 'e']
-      assert val is 1
+      assert.equal val, 1
       assert.deepEqual root.get(['a', 'e']), [2, 3]
 
     it 'should throw an error if the target path does not contain an array', ->
@@ -240,20 +240,29 @@ describe 'Cursor', ->
 
     it 'should set multiple keys at once', ->
       root.merge {a: b: c: 8, d: 9}
-      assert root.get(['a', 'b', 'c']) is 8
-      assert root.get(['a', 'b', 'd']) is 9
+      assert.equal root.get(['a', 'b', 'c']), 8
+      assert.equal root.get(['a', 'b', 'd']), 9
 
     it 'should not clear existing data', ->
       root.set ['a', 'e'], 4
-      assert root.get(['a', 'e']) is 4
-      assert root.get(['a', 'b', 'c']) is 1
+      assert.equal root.get(['a', 'e']), 4
+      assert.equal root.get(['a', 'b', 'c']), 1
 
     it 'should clear cached cursors along changed paths', ->
+      assert.equal handle.cache().size(), 0, 'cache should initially be empty'
+
       cursor1 = root.cursor ['a', 'b']
       cursor2 = root.cursor ['a', 'e']
+
+      assert.equal handle.cache().size(), 3, 'we have stored 3 nodes'
+
       root.merge a: b: c: 10
-      assert root.cursor(['a', 'b']) isnt cursor1
-      assert root.cursor(['a', 'e']) is cursor2
+
+      # the cursor at ['a', 'e'] should still be cached, meaning 2 nodes
+      assert.equal handle.cache().size(), 2, '[a, e] should still be cached'
+
+      assert.notEqual root.cursor(['a', 'b']), cursor1, 'this should be cleared'
+      assert.equal root.cursor(['a', 'e']), cursor2, 'this should be cached'
 
 
   describe 'setting data through subcursors', ->

@@ -35,8 +35,6 @@ empty = (target) ->
     target.length is 0 and not target[cursorSymbol]?
 
 
-
-
 module.exports = class CursorCache
 
 
@@ -93,18 +91,18 @@ module.exports = class CursorCache
 
   # recursively clear all paths on an object
 
-  clearObject = (node, key, parent, changes) ->
+  clearObject = (node, changes) ->
+    del node, cursorSymbol
     for k of changes
-      if (child = get node, k)?
-        del child, cursorSymbol
-        clearObject child, node, k, changes[k]
-        del parent, key if parent? and empty child
+      if (next = get node, k)?
+        clearObject next, changes[k]
+        del node, k if empty next
 
   clearObject: (path, obj) ->
     target = @clearPath path
     return unless target?
 
-    clearObject target, null, null, obj
+    clearObject target, obj
 
 
   # clear certain elements in an array by index, shifting following elements

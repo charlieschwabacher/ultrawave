@@ -5,6 +5,8 @@
 const cursorSymbol = Symbol()
 
 
+// define some functions to perform operations on either an Array or Map object
+
 function get(target, key) {
   if (target instanceof Map)
     return target.get(key)
@@ -64,16 +66,13 @@ function clearPath (node, key, parent, path) {
 
 // recursively clear all paths on an object
 
-function clearObject(node, key, parent, changes) {
+function clearObject(node, changes) {
+  del(node, cursorSymbol)
   for (let k in changes) {
-    const child = get(node, k)
-    if (child != null) {
-      del(child, cursorSymbol)
-      clearObject(child, k, node, changes[k])
-
-      if (parent != null && empty(child)) {
-        del(parent, key)
-      }
+    let next = get(node, k)
+    if (next != null) {
+      clearObject(next, changes[k])
+      if (empty(next)) del(node, k)
     }
   }
 }
@@ -93,7 +92,7 @@ function size(node) {
     return result + node.size + (node.has(cursorSymbol) ? -1 : 0)
   } else {
     return node.reduce((memo, child) => {
-      (child != null) ? memo + 1 + size(child) : memo
+      return child != null ? memo + 1 + size(child) : memo
     }, 0)
   }
 }
@@ -101,10 +100,9 @@ function size(node) {
 
 
 
-
+// the cursor cache class
 
 module.exports = class CursorCache {
-
 
   constructor(data) {
     this.data = data
@@ -147,7 +145,7 @@ module.exports = class CursorCache {
     const target = this.clearPath(path)
     if (target == null) return
 
-    clearObject(target, null, null, obj)
+    clearObject(target, obj)
   }
 
   spliceArray(path, start, deleteCount, addCount) {
