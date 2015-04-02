@@ -1,5 +1,6 @@
-something is up w/ es6 version of cursor causing intermittent failures, need to
-finish converting ultrawave, then server code.
+something is up w/ es6 version of cursor causing intermittent failures, figure
+why 'Cursor' var needs to be declared at the top level instead of colusure in
+module.exports.create.
 
 
 browser requirements:

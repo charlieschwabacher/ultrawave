@@ -3,11 +3,12 @@ const deepMerge = require('./deep_merge')
 const CursorCache = require('./cursor_cache')
 
 
+
 module.exports = {
 
   // make a cursor superclass accessible for type checking
 
-  Cursor: class Cursor {},
+  Cursor: class {},
 
 
   create: function(inputData, onChange) {
@@ -36,7 +37,7 @@ module.exports = {
 
 
 
-    // declare some private functions used by the Cursor class
+    // update the local reference to the data, and queue the onchange callback
 
     const update = (newData) => {
       data = newData
@@ -51,9 +52,15 @@ module.exports = {
       return newData
     }
 
+    // keep track of changes to the data
+
     const recordChange = (method, ...args) => {
       changes.push([method, args])
     }
+
+    // Creates a new data object from the existing data, but with the node
+    // at fullPath modified by the modifier function, then passes the resulting
+    // object to update
 
     const modifyAt = (fullPath, modifier) => {
       const newData = Array.isArray(data) ? [] : {}
@@ -212,6 +219,7 @@ module.exports = {
     return {
       data: () => data,
       cache: () => cache,
+      root: () => new Cursor,
       pending: () => pending,
       changes: () => changes
     }

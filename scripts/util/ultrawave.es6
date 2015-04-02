@@ -6,59 +6,36 @@ const MapMap = require('./map_map')
 
 
 const RTCPeerConnection = (
-  window.RTCPeerConnection or
-  window.webkitRTCPeerConnection or
+  window.RTCPeerConnection ||
+  window.webkitRTCPeerConnection ||
   window.mozRTCPeerConnection
 )
 const RTCSessionDescription = (
-  window.RTCSessionDescription or
+  window.RTCSessionDescription ||
   window.mozRTCSessionDescription
 )
 const RTCIceCandidate = (
-  window.RTCIceCandidate or
+  window.RTCIceCandidate ||
   window.mozRTCIceCandidate
 )
-
 
 
 const log = (message) => {
   // console.log message
 }
 
-const attemptJoin = function(action, room, success, failure) {
-  if (this.rooms.has(room)) return
-
-  this.ws.send(action, room)
-
-  onSuccess = (subjectRoom) => {
-    if (subjectRoom !== room) return
-    this.ws.off(action, onSuccess)
-    this.ws.off(`${action} failed`, onFailure)
-    this.rooms.add(room)
-    this.trigger(this.events.join, room)
-    success()
-  }
-
-  onFailure = (subjectRoom) => {
-    if (subjectRoom !== room) return
-    this.ws.off(action, onSuccess)
-    this.ws.off(`${action} failed`, onFailure)
-    failure()
-  }
-
-  this.ws.on(action, onSuccess)
-  this.ws.on(`${action} failed`, onFailure)
-}
 
 
+// we will set configuration and events on the prototype after creating the
+// Ultrawave class
 
-Ultrawave.prototype.configuration = {
+const configuration = {
   iceServers: [{url: 'stun:stun.l.google.com:19302'}]
 }
 
 // use symbols for event types to prevent the possibility that they could
 // clash with message types sent by peers
-Ultrawave.prototype.events = {
+const events = {
   open: Symbol(),
   close: Symbol(),
   start: Symbol(),
@@ -67,10 +44,10 @@ Ultrawave.prototype.events = {
 }
 
 
-module.exports = class Ultrawave {
+class Ultrawave {
 
   constructor(url) {
-    this.ws = new WS url
+    this.ws = new WS(url)
     this.rooms = new Set
     this.connections = new MapMap
     this.channels = new MapMap
@@ -124,8 +101,8 @@ module.exports = class Ultrawave {
       log('recieved request for offer')
       if (!this.rooms.has(room)) return
 
-      connection = new RTCPeerConnection(this.configuration)
-      dataChannel = connection.createDataChannel("#{room}:#{from}")
+      const connection = new RTCPeerConnection(this.configuration)
+      const dataChannel = connection.createDataChannel("#{room}:#{from}")
 
       dataChannel.addEventListener('open', () => {
         log('data channel opened to peer')
@@ -161,7 +138,7 @@ module.exports = class Ultrawave {
       log('recieved offer')
       if (!this.rooms.has(room)) return
 
-      connection = new RTCPeerConnection(this.configuration)
+      const connection = new RTCPeerConnection(this.configuration)
 
       connection.addEventListener('datachannel', (e) => {
         log('data channel opened by peer')
@@ -224,16 +201,43 @@ module.exports = class Ultrawave {
 
 
 
+  attemptAction(action, room, success, failure) {
+    if (this.rooms.has(room)) return
+
+    const actionFailure = `${action} failed`
+
+    const onSuccess = (subjectRoom) => {
+      if (subjectRoom !== room) return
+      this.ws.off(action, onSuccess)
+      this.ws.off(actionFailure, onFailure)
+      this.rooms.add(room)
+      this.trigger(this.events.join, room)
+      success()
+    }
+
+    const onFailure = (subjectRoom) => {
+      if (subjectRoom !== room) return
+      this.ws.off(action, onSuccess)
+      this.ws.off(actionFailure, onFailure)
+      failure()
+    }
+
+    this.ws.on(action, onSuccess)
+    this.ws.on(actionFailure, onFailure)
+    this.ws.send(action, room)
+  }
+
+
   create(room) {
     return new Promise((resolve, reject) => {
-      attemptJoin.apply(this, ['create', room, resolve, reject])
+      this.attemptAction('create', room, resolve, reject)
     })
   }
 
 
   join(room) {
     return new Promise((resolve, reject) => {
-      attemptJoin.apply(this, ['join', room, resolve, reject])
+      this.attemptAction('join', room, resolve, reject)
     })
   }
 
@@ -308,4 +312,8 @@ module.exports = class Ultrawave {
 
 }
 
+Ultrawave.prototype.events = events
+Ultrawave.prototype.configuration = configuration
+
+module.exports = Ultrawave
 

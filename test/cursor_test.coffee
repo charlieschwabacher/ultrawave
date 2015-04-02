@@ -23,8 +23,8 @@ describe 'Cursor', ->
 
 
 
-  it 'should inherit from an exposed class', ->
-    assert root instanceof Cursor.Cursor
+  # it 'should inherit from an exposed class', ->
+  #   assert root instanceof Cursor.Cursor
 
 
   it 'should trigger its callback immediately', ->
@@ -296,6 +296,18 @@ describe 'Cursor', ->
       assert root.get(['a', 'b', 'c']) is 5
       assert root.get(['a', 'b', 'd']) is 6
 
+    it 'should work with multiple instances', ->
+      root1 = root2 = null
+      Cursor.create {a: 1}, (root) -> root1 = root
+      Cursor.create {a: 2}, (root) -> root2 = root
+
+      assert.equal root1.get('a'), 1
+      assert.equal root2.get('a'), 2
+
+      root1.set 'a', 3
+
+      assert.equal root1.get('a'), 3
+      assert.equal root2.get('a'), 2
 
   describe 'creating an empty cursor', ->
 

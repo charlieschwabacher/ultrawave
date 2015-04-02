@@ -3,13 +3,17 @@ deepMerge = require './deep_merge'
 CursorCache = require './cursor_cache'
 
 
+# if i don't export this here (Curor: class Cursor in module.exports ends up
+# doing the same thing..), then tests fail non deterministically.. am i missing
+# something about how things are garbage collected, is this a bug?
+Cursor = null
+
+
 module.exports =
 
-  # make a cursor superclass accessible for type checking
-  Cursor: (class Cursor)
+  # Cursor: class Cursor
 
   create: (inputData, onChange) ->
-
     # this is the master reference to data, any change will replace this object
     data = deepFreeze inputData
     cache = new CursorCache -> data
@@ -28,7 +32,7 @@ module.exports =
 
 
     # create local cursor class w/ access to mutable reference to data
-    class Cursor extends module.exports.Cursor
+    class Cursor #extends module.exports.Cursor
 
       constructor: (@path = []) ->
 
