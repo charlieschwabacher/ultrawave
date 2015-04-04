@@ -292,10 +292,18 @@ class Ultrawave {
 
 
   send(room, type, payload) {
-    const message = JSON.stringify([type, payload])
     const channels = this.channels.get(room)
     if (channels != null) {
+      const message = JSON.stringify([type, payload])
       channels.forEach((channel) => channel.send(message))
+    }
+  }
+
+
+  sendTo(room, id, type, payload) {
+    const channel = this.channels.get(room, id)
+    if (channel != null) {
+      channel.send(JSON.stringify([type, payload]))
     }
   }
 

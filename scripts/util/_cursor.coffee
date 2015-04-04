@@ -6,7 +6,7 @@ CursorCache = require './cursor_cache'
 # if i don't export this here (Curor: class Cursor in module.exports ends up
 # doing the same thing..), then tests fail non deterministically.. am i missing
 # something about how things are garbage collected, is this a bug?
-Cursor = null
+# Cursor = null
 
 
 module.exports =
