@@ -4,11 +4,15 @@ const CursorCache = require('./cursor_cache')
 
 
 
+let Cursor
+
+
+
 module.exports = {
 
   // make a cursor superclass accessible for type checking
 
-  Cursor: class {},
+  Cursor: (Cursor = class {}),
 
 
   create: function(inputData, onChange) {
@@ -91,6 +95,7 @@ module.exports = {
 
     class Cursor extends module.exports.Cursor {
       constructor(path = []) {
+        super()
         this.path = path
       }
 
@@ -174,7 +179,7 @@ module.exports = {
 
         return modifyAt(fullPath, (target, key) => {
           const arr = target[key]
-          if (!Array.isArray(arr)) throw new Error('can\'t splice non array')
+          if (!Array.isArray(arr)) throw new Error('can\'t splice a non array')
           const updated = arr.slice(0)
           const result = updated.splice(start, deleteCount, ...elements)
           target[key] = deepFreeze(updated)
@@ -213,9 +218,12 @@ module.exports = {
 
 
     // perform callback one time to start
+
     onChange(new Cursor)
 
+
     // return a 'handle' to the cursor instance
+
     return {
       data: () => data,
       cache: () => cache,

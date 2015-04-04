@@ -1,6 +1,7 @@
 {
   "devDependencies": {
     "autoprefixer-stylus": "^0.3.0",
+    "babel": "^5.0.7",
     "brfs": "^1.2.0",
     "browserify": "^5.9.1",
     "build-status": "^1.0.15",
@@ -21,7 +22,6 @@
     "vinyl-source-stream": "^1.0.0"
   },
   "dependencies": {
-    "react": "^0.13.0",
     "ws": "^0.7.1"
   }
 }

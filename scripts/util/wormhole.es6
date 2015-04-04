@@ -1,5 +1,6 @@
 const Ultrawave = require('./ultrawave')
 const MapMap = require('./map_map')
+const MapArray = require('./map_array')
 const Cursor = require('./cursor')
 
 
@@ -9,21 +10,21 @@ module.exports = class Wormhole {
     this.ultrawave = new Ultrawave(url)
     this.handles = new Map
     this.timeouts = new MapMap
-    this.changes = []
+    this.changes = new MapArray
 
 
     // respond to requests from peers
 
     this.ultrawave.on('request document', (room, id) => {
-      data = this.handles.get(room).data()
-      this.ultrawave.sendTo(room, id, 'document', data)
+      const data = this.handles.get(room).data()
+      const changes = this.changes.get(room)
+      this.ultrawave.sendTo(room, id, 'document', {clock: clock, data: data})
     })
 
     this.ultrawave.on('request changes', (room, id, latest) => {
       for (let i = changes.length - 1; i >= 0; i -= 1) {
         const [clock, method, args] = changes[i]
         if (!clock.laterThan(latest)) return
-
         this.ultrawave.sendTo(room, id, method, args)
       }
     })
@@ -42,16 +43,17 @@ module.exports = class Wormhole {
 
     // apply changes from peers
 
-    ['set', 'delete', 'merge', 'splice'].forEach((method) => {
+    const methods = ['set', 'delete', 'merge', 'splice']
+    methods.forEach((method) => {
       this.ultrawave.on(method, (room, id, args) => {
-        const cursor = this.handles.get(room).
+        const cursor = this.handles.get(room)
       })
     })
   }
 
 
 
-  create(room, initialData, cb) {
+  create: function(room, initialData, cb) {
     return new Promise((resolve, reject) => {
       this.ultrawave.create(room).then(() => {
         const handle = Cursor.create(initialData, cb)
@@ -59,10 +61,10 @@ module.exports = class Wormhole {
         resolve(handle)
       }).catch(reject)
     })
-  }
+  },
 
 
-  join(room, cb) {
+  join: function(room, cb) {
     const events = this.ultrawave.events
 
     return new Promise((resolve, reject) => {
