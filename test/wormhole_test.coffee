@@ -8,6 +8,7 @@ global.window = require './rtc_mocks'
 assert = require 'assert'
 UltrawaveServer = require '../server/ultrawave_server'
 Wormhole = require '../scripts/util/wormhole'
+VectorClock = require '../scripts/util/vector_clock'
 UltrawaveServer.log = false
 
 port = 5500
@@ -23,12 +24,37 @@ setupRoom = (peers, roomName, callback) ->
 
 describe 'Wormhole:', ->
 
+  describe '#applyRemoteChange', ->
+
+    it 'should apply changes directly when clock is later than last
+        clock', (done) ->
+
+      wormhole = new Wormhole "ws:localhost"
+
+      clock = new VectorClock 0, {0: 2}
+      args = [1,2,3]
+
+      wormhole.clocks.set 'lobby', new VectorClock 0, {0: 1}
+      wormhole.changes.set 'lobby', []
+      wormhole.handles.set 'lobby', data: (-> {}), set: ->
+        assert.equal(arg, arguments[i]) for arg, i in args
+        done()
+
+      wormhole.applyRemoteChange 'lobby', clock, 'set', args
+
+    it 'should ignore changes that have already been applied', ->
+
+    it 'should apply changes in order when clock is before earlier clock', ->
+
+    it 'should use peer id to resolve ambiguous ordering of chnages', ->
+
+
   describe 'when a peer requests a document', ->
 
     it 'the peer should send "request document" to the first peer it
         connects to', ->
       server = new UltrawaveServer port += 1
-      client = new Wormhole "ws:localhost:#{port}", (root) ->
+      client = new Wormhole "ws:localhost:#{port}"
 
 
     it 'the peer receiving "request document" should respond with "document",

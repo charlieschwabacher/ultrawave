@@ -21,18 +21,15 @@ module.exports = {
 
     let data = deepFreeze(inputData)
 
-
     // we use a cursor cache to ensure that any two cursors to the same object
     // will be referentially equal
 
     const cache = new CursorCache(() => data)
 
-
     // when data changes, we queue queue only one update which runs after
     // execution ends
 
     let pending = false
-
 
     // we keep an array of batched changes which will be passed to the callback
     // along with a cursor to the updated data
@@ -58,7 +55,7 @@ module.exports = {
 
     // keep track of changes to the data
 
-    const recordChange = (method, ...args) => {
+    const recordChange = (method, args) => {
       changes.push([method, args])
     }
 
@@ -87,6 +84,60 @@ module.exports = {
       update(newData)
 
       return result
+    }
+
+
+
+    // define some functions to update data
+
+    const set = (fullPath, value) => {
+      if (fullPath.length > 0) {
+        cache.clearPath(fullPath)
+        modifyAt(fullPath, (target, key) => {
+          target[key] = deepFreeze(value)
+        })
+      } else {
+        cache.reset()
+        update(value)
+      }
+      return value
+    }
+
+    const del = (fullPath) => {
+      if (fullPath.length > 0) {
+        cache.clearPath(fullPath)
+        modifyAt(fullPath, (target, key) => {
+          delete target[key]
+        })
+      } else {
+        cache.reset()
+        update(undefined)
+      }
+      return true
+    }
+
+    const merge = (fullPath, newData) => {
+      cache.clearObject(fullPath, newData)
+      if (fullPath.length > 0) {
+        return modifyAt(fullPath, (target, key) => {
+          target[key] = deepMerge(target[key], deepFreeze(newData))
+        })
+      } else {
+        return update(deepMerge(data, deepFreeze(newData)))
+      }
+    }
+
+    const splice = (fullPath, start, deleteCount, ...elements) => {
+      cache.spliceArray(fullPath, start, deleteCount, elements.length)
+
+      return modifyAt(fullPath, (target, key) => {
+        const arr = target[key]
+        if (!Array.isArray(arr)) throw new Error('can\'t splice a non array')
+        const updated = arr.slice(0)
+        const result = updated.splice(start, deleteCount, ...elements)
+        target[key] = deepFreeze(updated)
+        return result
+      })
     }
 
 
@@ -125,66 +176,26 @@ module.exports = {
           path = []
         }
         const fullPath = this.path.concat(path)
-
-        recordChange('set', fullPath, value)
-
-        if (fullPath.length > 0) {
-          cache.clearPath(fullPath)
-          modifyAt(fullPath, (target, key) => {
-            target[key] = deepFreeze(value)
-          })
-        } else {
-          cache.reset()
-          update(value)
-        }
-        return value
+        recordChange('set', [fullPath, value])
+        return set(fullPath, value)
       }
 
       delete(path = []) {
         const fullPath = this.path.concat(path)
-
-        recordChange('delete', fullPath)
-
-        if (fullPath.length > 0) {
-          cache.clearPath(fullPath)
-          modifyAt(fullPath, (target, key) => {
-            delete target[key]
-          })
-        } else {
-          cache.reset()
-          update(undefined)
-        }
-        return true
+        recordChange('delete', [fullPath])
+        return del(fullPath)
       }
 
       merge(newData) {
-        recordChange('merge', this.path, newData)
-
-        cache.clearObject(this.path, newData)
-        if (this.path.length > 0) {
-          return modifyAt(this.path, (target, key) => {
-            target[key] = deepMerge(target[key], deepFreeze(newData))
-          })
-        } else {
-          return update(deepMerge(data, deepFreeze(newData)))
-        }
+        const fullPath = this.path
+        recordChange('merge', [fullPath, newData])
+        return merge(fullPath, newData)
       }
 
       splice(path, start, deleteCount, ...elements) {
         const fullPath = this.path.concat(path)
-
-        recordChange('splice', fullPath, start, deleteCount, elements)
-
-        cache.spliceArray(fullPath, start, deleteCount, elements.length)
-
-        return modifyAt(fullPath, (target, key) => {
-          const arr = target[key]
-          if (!Array.isArray(arr)) throw new Error('can\'t splice a non array')
-          const updated = arr.slice(0)
-          const result = updated.splice(start, deleteCount, ...elements)
-          target[key] = deepFreeze(updated)
-          return result
-        })
+        recordChange('splice', [fullPath, start, deleteCount, ...elements])
+        return splice(fullPath, start, deleteCount, ...elements)
       }
 
       push(path, value) {
@@ -227,9 +238,13 @@ module.exports = {
     return {
       data: () => data,
       cache: () => cache,
-      root: () => new Cursor,
       pending: () => pending,
-      changes: () => changes
+      changes: () => changes,
+      cursor: (path) => new Cursor(path),
+      set: set,
+      delete: del,
+      merge: merge,
+      splice: splice
     }
 
   }

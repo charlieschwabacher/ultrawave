@@ -11,6 +11,7 @@ never re-form connection w/ the peer.. when a peer notices a missed message and
 requests a sync, it should check for a connection w/ that peer and if it has
 closed it should send 'offer' to the server in an attempt to re-establish it
 
+need to handle missing messages (move them off of vector clock?)
 
 
 

@@ -13,8 +13,13 @@ module.exports = class VectorClock {
     this[this.id] = this[this.id] || 0
   }
 
+  clone() {
+    return new VectorClock(this.id, this)
+  }
+
   increment() {
-    return this[this.id] += 1
+    this[this.id] += 1
+    return this
   }
 
   update(clock) {
@@ -37,6 +42,7 @@ module.exports = class VectorClock {
         }
       }
     }
+    return this
   }
 
   laterThan(clock) {
