@@ -7,10 +7,11 @@ module.exports = class Wormhole {
 
   constructor(url) {
     this.ultrawave = new Ultrawave(url)
-    this.timeouts = new MapMap
     this.handles = new Map
     this.clocks = new Map
-    this.changes = new Map // arrays of changes [data, clock, method, args]
+    this.timeouts = new MapMap
+    this.changes = new MapArray // arrays of changes [data, clock, method, args]
+    this.missingChanges = new MapMapSet
 
 
     // respond to requests from peers
@@ -47,7 +48,16 @@ module.exports = class Wormhole {
     const methods = ['set', 'delete', 'merge', 'splice']
     methods.forEach((method) => {
       this.ultrawave.on(method, (room, id, {clock, args}) => {
+
         // check for and track missing messages
+        for (let id in clock) {
+          this.missingChanges.delete(room, id, tick)
+          if (tick - (latest || 0) > 1) {
+            for (let i = latest + 1; i < tick; i++) {
+              this[missingSymbol].add(id, i)
+            }
+          }
+        }
 
         // update clock
         this.clocks.get(room).update(clock)
@@ -56,6 +66,7 @@ module.exports = class Wormhole {
         this.applyRemoteChange(room, clock, method, args)
       })
     })
+
   }
 
 

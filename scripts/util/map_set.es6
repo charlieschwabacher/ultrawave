@@ -41,4 +41,5 @@ module.exports = class MapSet {
       return !!set && set.has(value)
     }
   }
+
 }

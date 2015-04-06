@@ -63,17 +63,3 @@ describe 'VectorClock', ->
       clock = new VectorClock 2, {1: 2, 2: 2, 3: 3}
       other = {id: 1, 1: 1, 2: 3, 3: 3}
       assert not clock.laterThan other
-
-
-  describe '#applied', ->
-
-    it 'should return true for messages in the past', ->
-      clock = new VectorClock 1, {1: 1, 2: 2}
-      assert clock.applied 2, 1
-
-    it 'should return false for skipped messages', ->
-      clock = new VectorClock 1, {1: 1}
-      clock.update {id: 1, 1: 3}
-      assert not clock.applied 1, 2
-
-

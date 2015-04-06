@@ -1,14 +1,7 @@
-const MapSet = require('./map_set')
-
-
-const missingSymbol = Symbol()
-
-
 module.exports = class VectorClock {
 
   constructor(id, clock) {
     this.id = id
-    this[missingSymbol] = new MapSet
     for (let key in clock) this[key] = clock[key]
     this[this.id] = this[this.id] || 0
   }
@@ -32,14 +25,6 @@ module.exports = class VectorClock {
         this[id] = Math.max(latest, tick)
       } else {
         this[id] = tick
-      }
-
-      // keep track of missing updates
-      this[missingSymbol].delete(id, tick)
-      if (tick - (latest || 0) > 1) {
-        for (let i = latest + 1; i < tick; i++) {
-          this[missingSymbol].add(id, i)
-        }
       }
     }
     return this
@@ -68,6 +53,6 @@ module.exports = class VectorClock {
   }
 
   applied(id, tick) {
-    return this[id] >= tick && !this[missingSymbol].has(id, tick)
+    return this[id] >= tick
   }
 }
