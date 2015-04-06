@@ -1,5 +1,5 @@
 assert = require 'assert'
-Cursor = require '../scripts/util/cursor'
+Cursor = require '../scripts/cursor'
 
 
 

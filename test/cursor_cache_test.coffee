@@ -1,5 +1,5 @@
 assert = require 'assert'
-CursorCache = require '../scripts/util/cursor_cache'
+CursorCache = require '../scripts/cursor_cache'
 
 
 logIterator = (iterator) ->

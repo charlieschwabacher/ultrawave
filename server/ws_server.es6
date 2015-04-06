@@ -1,6 +1,6 @@
 const ws = require('ws')
 const crypto = require('crypto')
-const MapSet = require('../scripts/util/map_set')
+const MapSet = require('../scripts/data_structures/map_set')
 const WebSocketServer = ws.Server
 
 

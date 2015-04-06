@@ -81,14 +81,12 @@ When a peer recieves a message indicating a change to the document
   list of recent changes, and updates its clock
 - if the incoming clock is earlier, the peer looks in its list of changes until
   it finds the immediately preceding change.
-- if no paths in the conflicting changes overlap, the peer applies the change
-  and inserts it in place to the list of recent changes
-- if paths do overlap, the peer rewinds state to the immediately preceding
-  change, then applies all remaining changes in order.
+- the peer rewinds state to the immediately preceding change, then applies all
+  remaining changes in order.
 - conflicts are resolved in favor of the author with lowest id
 - if the incoming clock indicates a missed message from one peer, the peer sets
   a timeout after which it will send a 'request sync' message with the missing
-  author id and clock ticks
+  author id and clock tick
 - the peer invalidates any existing timeouts that the incoming message makes
   redundant
 

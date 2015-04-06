@@ -1,5 +1,5 @@
 assert = require 'assert'
-MapMap = require '../scripts/util/map_map'
+MapMap = require '../scripts/data_structures/map_map'
 
 describe 'MapMap', ->
 

@@ -6,7 +6,7 @@ global.window = require './rtc_mocks'
 # require dependancies
 
 assert = require 'assert'
-Ultrawave = require '../scripts/util/ultrawave'
+Ultrawave = require '../scripts/ultrawave'
 UltrawaveServer = require '../server/ultrawave_server'
 UltrawaveServer.log = false
 events = Ultrawave::events
