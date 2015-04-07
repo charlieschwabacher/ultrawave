@@ -5,14 +5,6 @@ why 'Cursor' var needs to be declared at the top level instead of closure in
 module.exports.create. (maybe only an iojs issue?  cursor seems to work using
 node v0.12.0 on my laptop)
 
-if one peer looses connection to another peer in a room, it will end up
-requesting that peers messages from other peers through 'request sync', but will
-never re-form connection w/ the peer.. when a peer notices a missed message and
-requests a sync, it should check for a connection w/ that peer and if it has
-closed it should send 'offer' to the server in an attempt to re-establish it
-
-need to handle missing messages (move them off of vector clock?)
-
 
 
 
@@ -31,8 +23,9 @@ vector clocks are used to create an ordering and ensure that operations are
 idempotent so that the document will be eventually consistant across peers.
 
 There are 3 distinct modules here - Cursor handles modeling a deep tree of
-immutable data, Ultrawave handles peering and messaging over webrtc datachannels
-(including a server component), and Wormhole
+immutable data, PeerGroup handles peering and messaging over webrtc datachannels
+(including a GroupServer component), and Ultrawave handles syncing changes to
+a document between peers
 
 
 When a peer connects to the server

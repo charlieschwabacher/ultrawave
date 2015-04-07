@@ -12,7 +12,7 @@ module.exports = class MapMapSet {
   }
 
   add(key1, key2, value) {
-    let map = this.map.get(key)
+    let map = this.map.get(key1)
     if (map == null) {
       map = new Map
       this.map.set(key1, map)

@@ -1,327 +1,287 @@
-//default event types are 'open', 'close', 'join', 'leave', and 'peer'
-
-const WS = require('./ws')
-const MapSet = require('./data_structures/map_set')
-const MapMap = require('./data_structures/map_map')
-
-
-const RTCPeerConnection = (
-  window.RTCPeerConnection ||
-  window.webkitRTCPeerConnection ||
-  window.mozRTCPeerConnection
-)
-const RTCSessionDescription = (
-  window.RTCSessionDescription ||
-  window.mozRTCSessionDescription
-)
-const RTCIceCandidate = (
-  window.RTCIceCandidate ||
-  window.mozRTCIceCandidate
-)
+const PeerGroup = require('./peer_group')
+const Cursor = require('./cursor')
+const MapMapMap = require('./data_structures/map_map_map')
+const MapMapSet = require('./data_structures/map_map_set')
+const MapArray = require('./data_structures/map_array')
 
 
-const log = (message) => {
-  // console.log message
-}
+const interval = 200
 
 
-
-// we will set configuration and events on the prototype after creating the
-// Ultrawave class
-
-const configuration = {
-  iceServers: [{url: 'stun:stun.l.google.com:19302'}]
-}
-
-// use symbols for event types to prevent the possibility that they could
-// clash with message types sent by peers
-const events = {
-  open: Symbol(),
-  close: Symbol(),
-  start: Symbol(),
-  join: Symbol(),
-  peer: Symbol()
-}
-
-
-class Ultrawave {
+module.exports = class Wormhole {
 
   constructor(url) {
-    this.ws = new WS(url)
-    this.rooms = new Set
-    this.connections = new MapMap
-    this.channels = new MapMap
-    this.handlers = new MapSet
-    this.open = false
-    this.id = null
+    this.peerGroup = new PeerGroup(url)
+    this.handles = new Map
+    this.clocks = new Map
+    this.changes = new MapArray // arrays of changes [data, clock, method, args]
+    this.timeouts = new MapMapMap
 
-    const addDataChannel = (room, id, dataChannel) => {
-      this.channels.set(room, id, dataChannel)
 
-      dataChannel.addEventListener('close', () =>
-        this.channels.delete(room, id)
-      )
+    // respond to requests from peers
 
-      dataChannel.addEventListener('message', (e) => {
-        let [type, payload] = JSON.parse(e.data)
-        this.trigger(type, room, id, payload)
+    this.peerGroup.on('request document', (group, id) => {
+      const data = this.handles.get(group).data()
+      const changes = this.changes.get(group)
+      this.peerGroup.sendTo(group, id, 'document', {clock: clock, data: data})
+    })
+
+    this.peerGroup.on('request changes', (group, id, latest) => {
+      for (let i = changes.length - 1; i >= 0; i -= 1) {
+        const [, clock, method, args] = changes[i]
+        if (latest.laterThan(clock)) return
+        if (clock.id === this.peerGroup.id) {
+          this.peerGroup.sendTo(group, id, method, {clock: clock, args: args})
+        }
+      }
+    })
+
+    this.peerGroup.on('request sync', (group, id, {author, tick}) => {
+      for (let i = changes.length - 1; i >= 0; i -= 1) {
+        let [clock, method, args] = changes[i]
+        if (clock.id === author && clock[author] == tick) {
+          this.peerGroup.sendTo(group, id, method, {clock: clock, args: args})
+          break
+        }
+      }
+    })
+
+
+    // apply changes from peers
+
+    const methods = ['set', 'delete', 'merge', 'splice']
+    methods.forEach((method) => {
+      this.peerGroup.on(method, (group, id, {clock, args}) => {
+        this._clearTimeoutFor(group, clock)
+        this._syncMissingChangesFor(id, group, clock)
+        this._updateClock(group, clock)
+        this._applyRemoteChange(group, clock, method, args)
       })
+    })
+
+  }
+
+
+  clearTimeoutFor(group, clock) {
+    const author = clock.id
+    const tick = clock[author]
+    const pendingTimeout = this.timeouts.get(group, author, tick)
+    if (pendingTimeout != null) {
+      clearTimeout(pendingTimeout)
+      this.timeouts.delete(group, author, tick)
     }
-
-    const addPeerConnection = (room, id, connection) => {
-      this.connections.set(room, id, connection)
-
-      connection.addEventListener('signalingstatechange', (e) => {
-        if (connection.signalingState === 'closed') {
-          this.connections.delete(room, id)
-        }
-      })
-    }
+  }
 
 
-    this.ws.on('open', () => {
-      log('ws opened')
-      this.open = true
-      this.trigger(this.events.open, this)
-    })
+  syncMissingChangesFor(sender, group, clock) {
 
-    this.ws.on('close', () => {
-      log('ws closed')
-      this.open = false
-      this.trigger(this.events.close, this)
-    })
+    // compare clock to the current clock to identify any missing messages
 
-    this.ws.on('start', (id) => {
-      log('ws started')
-      this.id = id
-      this.trigger(this.events.start, this)
-    })
+    const author = clock.id
 
-    this.ws.on('request offer', ({room, from}) => {
-      log('recieved request for offer')
-      if (!this.rooms.has(room)) return
+    for (let id in clock) {
+      const tick = clock[id]
+      const latest = currentClock[id]
 
-      const connection = new RTCPeerConnection(this.configuration)
-      const dataChannel = connection.createDataChannel("#{room}:#{from}")
+      if (tick - (latest || 0) > 1) {
+        for (let i = latest + 1; i < tick; i++) {
 
-      dataChannel.addEventListener('open', () => {
-        log('data channel opened to peer')
-        this.trigger(this.events.peer, room, from)
-      })
+          const requestSync = () => {
+            // if we are still connected to the author of the change, request
+            // the change from them directly, otherwise request the change from
+            // the sender
+            if (this.peerGroup.peers(group).has(author)) {
+              const peer = author
+            } else {
+              const peer = sender
+            }
 
-      connection.addEventListener('icecandidate', (e) => {
-        if (e.candidate != null) {
-          this.ws.send('candidate', {
-            room: room,
-            to: from,
-            candidate: e.candidate
-          })
-        }
-      })
-
-      connection.createOffer((localDescription) => {
-        connection.setLocalDescription(localDescription, () => {
-          this.ws.send('offer', {
-            room: room,
-            to: from,
-            sdp: localDescription.sdp
-          })
-        })
-      })
-
-      addDataChannel(room, from, dataChannel)
-      addPeerConnection(room, from, connection)
-    })
-
-
-    this.ws.on('offer', ({room, from, sdp}) => {
-      log('recieved offer')
-      if (!this.rooms.has(room)) return
-
-      const connection = new RTCPeerConnection(this.configuration)
-
-      connection.addEventListener('datachannel', (e) => {
-        log('data channel opened by peer')
-        addDataChannel(room, from, e.channel)
-        this.trigger(this.events.peer, room, from)
-      })
-
-      connection.addEventListener('icecandidate', (e) => {
-        if (e.candidate != null) {
-          this.ws.send('candidate', {
-            room: room,
-            to: from,
-            candidate: e.candidate
-          })
-        }
-      })
-
-      const remoteDescription = new RTCSessionDescription({
-        sdp: sdp,
-        type: 'offer'
-      })
-      connection.setRemoteDescription(remoteDescription, () => {
-        connection.createAnswer((localDescription) => {
-          connection.setLocalDescription(localDescription, () => {
-            this.ws.send('answer', {
-              room: room,
-              to: from,
-              sdp: localDescription.sdp
+            this.peerGroup.sendTo(group, peer, 'request sync', {
+              author: author,
+              tick: i
             })
-          })
-        })
-      })
 
-      addPeerConnection(room, from, connection)
-    })
+            setSyncTimeout()
+          }
 
-    this.ws.on('answer', ({room, from, sdp}) => {
-      log('recieved answer')
-      const connection = this.connections.get(room, from)
+          const setSyncTimeout = () => {
+            const timeout = setTimeout(requestSync, interval)
+            this.timeouts.set(group, author, tick, timeout)
+          }
 
-      if (connection != null) {
-        const remoteDescription = new RTCSessionDescription({
-          sdp: sdp,
-          type: 'answer'
-        })
-        connection.setRemoteDescription(remoteDescription)
+          setSyncTimeout()
+        }
       }
-    })
+    }
+  }
 
-    this.ws.on('candidate', ({room, from, candidate}) => {
-      log('recieved ice candidate')
-      const connection = this.connections.get(room, from)
 
-      if (connection != null) {
-        const candidate = new RTCIceCandidate(candidate)
-        connection.addIceCandidate(candidate)
+  _updateClock(group, clock) {
+    this.clocks.get(group).update(clock)
+  }
+
+
+  _applyRemoteChange(group, clock, method, args) {
+    const changes = this.changes.get(group)
+    const handle = this.handles.get(group)
+
+    // if the change is in order, apply it right away and return
+    if (clock.laterThan(this.clocks.get(group))) {
+      handle[method].apply(null, args)
+      changes.push([handle.data(), clock, method, args])
+      return
+    }
+
+    // find the most recent change earlier than than the incoming change
+    let index
+    for (index = changes.length - 1; index > 0; index -= 1) {
+      if (clock.laterThan(changes[index].clock)) break
+    }
+
+    // rewind the data
+    handle.set([], changes[index][0])
+
+    // apply the incoming change and splice it in place
+    handle[method].apply(null, args)
+    changes.splice(index + 1, 0, [handle.data(), clock, method, args])
+
+    // replay changes after the incoming change
+    for (index = index + 2; index < changes.length; index += 1) {
+      const [,, method, args] = changes[index]
+      handle[method].apply(null, args)
+    }
+  }
+
+
+  startCursor(group, initialData, cb) {
+    const clock = this.clocks.get(group)
+
+    const changes = []
+    this.changes.set(group, changes)
+
+    const handle = Cursor.create(initialData, (root, newChanges) => {
+      const data = handle.data()
+      for (let change of newChanges) {
+        const [method, args] = change
+        clock.increment()
+        const newClock = clock.clone()
+        changes.push([data, newClock, method, args])
+        this.peerGroup.send(group, method, {clock: newClock, args: args})
       }
+      cb(root, changes)
     })
+    this.handles.set(group, handle)
+
+    return handle;
   }
 
 
-
-  attemptAction(action, room, success, failure) {
-    if (this.rooms.has(room)) return
-
-    const actionFailure = `${action} failed`
-
-    const onSuccess = (subjectRoom) => {
-      if (subjectRoom !== room) return
-      this.ws.off(action, onSuccess)
-      this.ws.off(actionFailure, onFailure)
-      this.rooms.add(room)
-      this.trigger(this.events.join, room)
-      success()
-    }
-
-    const onFailure = (subjectRoom) => {
-      if (subjectRoom !== room) return
-      this.ws.off(action, onSuccess)
-      this.ws.off(actionFailure, onFailure)
-      failure()
-    }
-
-    this.ws.on(action, onSuccess)
-    this.ws.on(actionFailure, onFailure)
-    this.ws.send(action, room)
-  }
-
-
-  create(room) {
+  create(group, initialData, cb) {
     return new Promise((resolve, reject) => {
-      this.attemptAction('create', room, resolve, reject)
+      this.peerGroup.create(group).then(() => {
+        this.clocks(group).set(new VectorClock(this.peerGroup.id))
+        resolve(this.startCursor(group, initialData, cb))
+      }).catch(reject)
     })
   }
 
 
-  join(room) {
+  join(group, cb) {
+    const events = this.peerGroup.events
+
     return new Promise((resolve, reject) => {
-      this.attemptAction('join', room, resolve, reject)
+      this.peerGroup.join(group).then(() => {
+        // request the current document state from the first peer we form a
+        // connection to, then send 'request changes' to each new peer
+        // requesting changes they have authored after that clock.
+        const documentRequestCandidates = []
+        let documentRequestTimeout
+        let changeRequestCandidates
+        let documentClock
+
+        const requestDocumentRetry = () => {
+           if (documentRequestCandidates.length > 0) {
+            const peer = documentRequestCandidates.shift()
+            this.peerGroup.sendTo(group, peer, 'request document')
+          }
+
+          documentRequestTimeout = setTimeout(requestDocumentRetry, interval)
+        }
+
+        const onPeer = (subjectGroup, id) => {
+          if (subjectGroup !== group) return
+
+          if (documentRequestTimeout == null) {
+
+            // request the document immediately from the first peer
+
+            this.peerGroup.sendTo(group, id, 'request document')
+            documentRequestTimeout = setTimeout(requestDocumentRetry, interval)
+
+          } else if (documentClock == null) {
+
+            // if the document has not been received, keep track of peers in
+            // case we need to request the document from them
+
+            documentRequestCandidates.push(id)
+
+          } else if (changeRequestCandidates.has(id)) {
+
+            // once the document has been recevied, request changes from peers
+            // as we connect to them
+
+            this.peerGroup.send(group, id, 'request changes', documentClock)
+            changeRequestCandidates.delete(id)
+
+            if (changeRequestCandidates.size === 0) {
+              this.peerGroup.off(events.peer, onPeer)
+            }
+
+          }
+        }
+
+        const onDocument = (subjectGroup, id, {clock, data}) => {
+          if (subjectGroup !== group) return
+          this.peerGroup.off(events.document, onDocument)
+          clearTimeout(documentRequestTimeout)
+
+          documentClock = clock
+          changeRequestCandidates = new Set(clock.keys())
+
+          // request changes from all group members
+          for (peer of this.peerGroup.peers(group)) {
+            if (changeRequestCandidates.delete(peer)) {
+              this.peerGroup.send(group, 'request changes', clock)
+            }
+          }
+
+          resolve(this.startCursor(group, data, cb))
+        }
+
+        this.peerGroup.on(events.peer, onPeer)
+        this.peerGroup.on('document', onDocument)
+
+      }).catch(reject)
     })
   }
 
 
-  joinOrCreate(room) {
-    return new Promise((resolve) => {
-      const create = () => this.create(room).then(resolve).catch(join)
-      const join = () => this.join(room).then(resolve).catch(create)
-      join()
-    })
-  }
-
-
-  leave(room) {
-    if (!this.rooms.has(room)) return
-
-    this.ws.send('leave', room)
-
-    this.rooms.delete(room)
-
-    const connections = this.connections.get(room)
-    if (connections != null) {
-      connections.forEach((connection) => connection.close())
+  leave(group) {
+    this.peerGroup.leave(group)
+    for (let timeout of this.timeouts.get(group).values()) {
+      clearTimeout(timeout)
     }
 
-    this.connections.delete(room)
-    this.channels.delete(room)
-
-    this.trigger(this.events.leave, room)
-  }
-
-
-  on(type, callback) {
-    this.handlers.add(type, callback)
-  }
-
-
-  off(type, callback) {
-    if (arguments.length === 1)
-      this.handlers.delete(type)
-    else
-      this.handlers.delete(type, callback)
-  }
-
-
-  trigger(type, ...args) {
-    const handlers = this.handlers.get(type)
-    if (handlers != null) {
-      handlers.forEach((handler) => handler.apply(null, args))
-    }
-  }
-
-
-  send(room, type, payload) {
-    const channels = this.channels.get(room)
-    if (channels != null) {
-      const message = JSON.stringify([type, payload])
-      channels.forEach((channel) => channel.send(message))
-    }
-  }
-
-
-  sendTo(room, id, type, payload) {
-    const channel = this.channels.get(room, id)
-    if (channel != null) {
-      channel.send(JSON.stringify([type, payload]))
-    }
+    this.handles.delete(group)
+    this.clocks.delete(group)
+    this.changes.delete(group)
+    this.timeouts.delete(group)
   }
 
 
   close() {
-    this.ws.close()
-    this.rooms.forEach((room) => {
-      const connections = this.connections.get(room)
-      if (connections != null) {
-        connections.forEach((connection) => connection.close())
-      }
-    })
+    this.peerGroup.close()
   }
 
+
 }
-
-Ultrawave.prototype.events = events
-Ultrawave.prototype.configuration = configuration
-
-module.exports = Ultrawave
-
