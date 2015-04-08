@@ -132,10 +132,15 @@ module.exports = class Wormhole {
       return
     }
 
-    // find the most recent change earlier than than the incoming change
+    // find the most recent change earlier than than the incoming change,
+    // unless we find that the incoming change has already been applied, in
+    // which case we can return without bothering to apply it again
     let index
-    for (index = changes.length - 1; index > 0; index -= 1) {
-      if (clock.laterThan(changes[index].clock)) break
+    const author = clock.id
+    for (index = changes.length - 1; index >= 0; index -= 1) {
+      const c = changes[index].clock
+      if (c.id === author && clock[author] == c[author]) return
+      if (clock.laterThan(c)) break
     }
 
     // rewind the data

@@ -6,8 +6,8 @@ global.window = require './rtc_mocks'
 # require dependancies
 
 assert = require 'assert'
-GroupServer = require '../server/ultrawave_server'
-Ultrawave = require '../scripts/wormhole'
+GroupServer = require '../server/group_server'
+Ultrawave = require '../scripts/ultrawave'
 VectorClock = require '../scripts/vector_clock'
 GroupServer.log = false
 
@@ -24,25 +24,45 @@ setupRoom = (peers, roomName, callback) ->
 
 describe 'Ultrawave:', ->
 
-  describe '#applyRemoteChange', ->
+  describe '#_applyRemoteChange', ->
 
     it 'should apply changes directly when clock is later than last
         clock', (done) ->
 
-      wormhole = new Ultrawave "ws:localhost"
+      ultrawave = new Ultrawave "ws:localhost"
 
       clock = new VectorClock 0, {0: 2}
       args = [1,2,3]
 
-      wormhole.clocks.set 'lobby', new VectorClock 0, {0: 1}
-      wormhole.changes.set 'lobby', []
-      wormhole.handles.set 'lobby', data: (-> {}), set: ->
-        assert.equal(arg, arguments[i]) for arg, i in args
-        done()
+      handle =
+        data: -> {}
+        set: ->
+          assert.equal(arg, arguments[i]) for arg, i in args
+          done()
 
-      wormhole.applyRemoteChange 'lobby', clock, 'set', args
+      ultrawave.handles.set 'lobby', handle
+      ultrawave.clocks.set 'lobby', new VectorClock 0, {0: 1}
+      ultrawave.changes.map.set 'lobby', []
+
+      ultrawave._applyRemoteChange 'lobby', clock, 'set', args
 
     it 'should ignore changes that have already been applied', ->
+
+      ultrawave = new Ultrawave "ws:localhost"
+
+      clock = new VectorClock 0, {0: 2}
+      args = [1,2,3]
+
+      handle =
+        data: -> {}
+        set: -> throw new Error 'this should not be called'
+
+      ultrawave.handles.set 'lobby', handle
+      ultrawave.clocks.set 'lobby', new VectorClock 0, {0: 3}
+      ultrawave.changes.map.set 'lobby', [{clock: {id: 0, 0: 2}}]
+
+      ultrawave._applyRemoteChange 'lobby', clock, 'set', args
+
 
     it 'should apply changes in order when clock is before earlier clock', ->
 

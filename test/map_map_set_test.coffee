@@ -1,7 +1,7 @@
 assert = require 'assert'
 MapMapSet = require '../scripts/data_structures/map_map_set'
 
-describe 'MapSet', ->
+describe 'MapMapSet', ->
 
   it 'should add, has, and delete', ->
     mapMapSet = new MapMapSet

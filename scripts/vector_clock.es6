@@ -7,7 +7,8 @@ module.exports = class VectorClock {
       if (!clock instanceof VectorClock) {
         clock = new VectorClock(clock.id, clock)
       }
-      for (let key of clock.keys()) {
+      for (let key of Object.keys(clock)) {
+        if (key === 'id') continue
         this[key] = clock[key]
       }
     }
@@ -20,7 +21,12 @@ module.exports = class VectorClock {
   }
 
   keys() {
-    return (for (key of Object.keys(this)) if (key !== 'id') key)
+    results = []
+    for (let key of Object.keys(this)) {
+      if (key === 'id') continue
+      results.push(key)
+    }
+    return results
   }
 
   increment() {
@@ -29,35 +35,30 @@ module.exports = class VectorClock {
   }
 
   update(clock) {
-    if (!clock instanceof VectorClock) {
-      clock = new VectorClock(clock.id, clock)
-    }
+    for (let key of Object.keys(clock)) {
+      if (key === 'id') continue
 
-    for (let id of clock.keys()) {
-      let tick = clock[id]
-      let latest = this[id]
-      id = parseInt(id)
+      let tick = clock[key]
+      let latest = this[key]
 
       if (latest) {
-        this[id] = Math.max(latest, tick)
+        this[key] = Math.max(latest, tick)
       } else {
-        this[id] = tick
+        this[key] = tick
       }
     }
     return this
   }
 
   laterThan(clock) {
-    if (!clock instanceof VectorClock) {
-      clock = new VectorClock(clock.id, clock)
-    }
-
     let later = false
     let earlier = false
-    for (let id of clock.keys()) {
-      if (this[id] < clock[id]) {
+    for (let key of Object.keys(clock)) {
+      if (key === 'id') continue
+
+      if (this[key] < clock[key]) {
         earlier = true
-      } else if (this[id] > clock[id]) {
+      } else if (this[key] > clock[key]) {
         later = true
       }
     }
