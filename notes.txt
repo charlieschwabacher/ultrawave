@@ -2,8 +2,8 @@ todo:
 
 something is up w/ es6 version of cursor causing intermittent failures, figure
 why 'Cursor' var needs to be declared at the top level instead of closure in
-module.exports.create. (maybe only an iojs issue?  cursor seems to work using
-node v0.12.0 on my laptop)
+module.exports.create. (no idea what is up but tests only fail on my imac, not
+on my laptop)
 
 
 
@@ -86,6 +86,8 @@ When a peer recieves a message indicating a change to the document
 
 api:
 
-Wormhole.create room, data, (root) ->
+Ultrawave.create room, data, (root) ->
+  React.render <Component>, el
 
-Wormhole.join room, (root) ->
+Ultrawave.join room, (root) ->
+  React.render <Component>, el

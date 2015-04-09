@@ -138,7 +138,7 @@ module.exports = class Wormhole {
     let index
     const author = clock.id
     for (index = changes.length - 1; index >= 0; index -= 1) {
-      const c = changes[index].clock
+      const c = changes[index][1]
       if (c.id === author && clock[author] == c[author]) return
       if (clock.laterThan(c)) break
     }

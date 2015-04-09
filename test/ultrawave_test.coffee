@@ -32,7 +32,7 @@ describe 'Ultrawave:', ->
       ultrawave = new Ultrawave "ws:localhost"
 
       clock = new VectorClock 0, {0: 2}
-      args = [1,2,3]
+      args = [1,2]
 
       handle =
         data: -> {}
@@ -51,7 +51,7 @@ describe 'Ultrawave:', ->
       ultrawave = new Ultrawave "ws:localhost"
 
       clock = new VectorClock 0, {0: 2}
-      args = [1,2,3]
+      args = [1,2]
 
       handle =
         data: -> {}
@@ -59,14 +59,71 @@ describe 'Ultrawave:', ->
 
       ultrawave.handles.set 'lobby', handle
       ultrawave.clocks.set 'lobby', new VectorClock 0, {0: 3}
-      ultrawave.changes.map.set 'lobby', [{clock: {id: 0, 0: 2}}]
+      ultrawave.changes.map.set 'lobby', [[{}, {id: 0, 0: 2}, 'set', [1,2]]]
 
       ultrawave._applyRemoteChange 'lobby', clock, 'set', args
 
 
-    it 'should apply changes in order when clock is before earlier clock', ->
+    it 'should apply changes in order when clock is before earlier
+        clock', (done) ->
+
+      ultrawave = new Ultrawave "ws:localhost"
+
+      changes = [
+        [{}, {id: 0, 0: 1}, 'set', [0,1]]
+        [{}, {id: 0, 0: 3}, 'set', [1,1]]
+      ]
+
+      clock = new VectorClock 0, {0: 2}
+      args = [1,2]
+      setCalls = 0
+
+      handle =
+        data: -> {}
+        set: (path, value) ->
+          setCalls += 1
+
+          # it should reset the data
+          if setCalls is 1
+            assert.deepEqual path, []
+            assert.equal value, changes[0][0]
+          # then apply our new change
+          if setCalls is 2
+            assert.equal path, 1
+            assert.equal value, 2
+          # than apply the last change
+          if setCalls is 3
+            assert.equal path, 1
+            assert.equal value, 1
+            done()
+
+      ultrawave.handles.set 'lobby', handle
+      ultrawave.clocks.set 'lobby', new VectorClock 0, {0: 3}
+      ultrawave.changes.map.set 'lobby', changes
+
+      ultrawave._applyRemoteChange 'lobby', clock, 'set', args
+
 
     it 'should use peer id to resolve ambiguous ordering of chnages', ->
+
+      ultrawave = new Ultrawave "ws:localhost"
+
+      clock = new VectorClock 1, {0: 0, 1: 1}
+      args = [1,3]
+
+      handle =
+        data: -> {}
+        set: (path, value) ->
+          assert.equal path, 1
+          assert.equal value, 3
+
+      ultrawave.handles.set 'lobby', handle
+      ultrawave.clocks.set 'lobby', new VectorClock 0, {0: 3}
+      ultrawave.changes.map.set 'lobby', [
+        [{}, {id: 0, 0: 1, 1: 0}, 'set', [1,2]]
+      ]
+
+      ultrawave._applyRemoteChange 'lobby', clock, 'set', args
 
 
   describe 'when a peer requests a document', ->
