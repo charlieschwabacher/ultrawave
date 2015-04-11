@@ -3,12 +3,13 @@ const Cursor = require('./cursor')
 const MapMapMap = require('./data_structures/map_map_map')
 const MapMapSet = require('./data_structures/map_map_set')
 const MapArray = require('./data_structures/map_array')
+const VectorClock = require('./vector_clock')
 
 
 const interval = 200
 
 
-module.exports = class Wormhole {
+module.exports = class Ultrawave {
 
   constructor(url) {
     this.peerGroup = new PeerGroup(url)
@@ -124,6 +125,11 @@ module.exports = class Wormhole {
   _applyRemoteChange(group, clock, method, args) {
     const changes = this.changes.get(group)
     const handle = this.handles.get(group)
+
+    // make sure clock is a vector clock
+    if (!(clock instanceof VectorClock)) {
+      clock = new VectorClock(clock.id, clock)
+    }
 
     // if the change is in order, apply it right away and return
     if (clock.laterThan(this.clocks.get(group))) {

@@ -74,8 +74,6 @@ describe 'Ultrawave:', ->
         [{}, {id: 0, 0: 3}, 'set', [1,1]]
       ]
 
-      clock = new VectorClock 0, {0: 2}
-      args = [1,2]
       setCalls = 0
 
       handle =
@@ -101,15 +99,13 @@ describe 'Ultrawave:', ->
       ultrawave.clocks.set 'lobby', new VectorClock 0, {0: 3}
       ultrawave.changes.map.set 'lobby', changes
 
-      ultrawave._applyRemoteChange 'lobby', clock, 'set', args
+      clock = new VectorClock 0, {0: 2}
+      ultrawave._applyRemoteChange 'lobby', clock, 'set', [1, 2]
 
 
     it 'should use peer id to resolve ambiguous ordering of chnages', ->
 
       ultrawave = new Ultrawave "ws:localhost"
-
-      clock = new VectorClock 1, {0: 0, 1: 1}
-      args = [1,3]
 
       handle =
         data: -> {}
@@ -118,20 +114,22 @@ describe 'Ultrawave:', ->
           assert.equal value, 3
 
       ultrawave.handles.set 'lobby', handle
-      ultrawave.clocks.set 'lobby', new VectorClock 0, {0: 3}
+      ultrawave.clocks.set 'lobby', new VectorClock 'a', {a: 1, b: 0}
       ultrawave.changes.map.set 'lobby', [
-        [{}, {id: 0, 0: 1, 1: 0}, 'set', [1,2]]
+        [{}, {id: 'a', a: 1, b: 0}, 'set', [1,2]]
       ]
 
-      ultrawave._applyRemoteChange 'lobby', clock, 'set', args
+      ultrawave._applyRemoteChange 'lobby', {id: 'b', a: 0, b: 1}, 'set', [1,3]
 
 
   describe 'when a peer requests a document', ->
 
     it 'the peer should send "request document" to the first peer it
         connects to', ->
+
       server = new GroupServer port += 1
       client = new Ultrawave "ws:localhost:#{port}"
+
 
 
     it 'the peer receiving "request document" should respond with "document",
