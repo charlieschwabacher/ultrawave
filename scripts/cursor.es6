@@ -230,7 +230,7 @@ module.exports = {
 
     // perform callback one time to start
 
-    onChange(new Cursor)
+    onChange(new Cursor, [])
 
 
     // return a 'handle' to the cursor instance

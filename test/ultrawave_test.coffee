@@ -7,9 +7,12 @@ global.window = require './rtc_mocks'
 
 assert = require 'assert'
 GroupServer = require '../server/group_server'
+PeerGroup = require '../scripts/peer_group'
 Ultrawave = require '../scripts/ultrawave'
 VectorClock = require '../scripts/vector_clock'
 GroupServer.log = false
+events = PeerGroup::events
+
 
 port = 5500
 
@@ -31,8 +34,8 @@ describe 'Ultrawave:', ->
 
       ultrawave = new Ultrawave "ws:localhost"
 
-      clock = new VectorClock 0, {0: 2}
-      args = [1,2]
+      clock = new VectorClock id: 'a', a: 2
+      args = ['b',2]
 
       handle =
         data: -> {}
@@ -41,7 +44,7 @@ describe 'Ultrawave:', ->
           done()
 
       ultrawave.handles.set 'lobby', handle
-      ultrawave.clocks.set 'lobby', new VectorClock 0, {0: 1}
+      ultrawave.clocks.set 'lobby', new VectorClock id: 'a', a: 1
       ultrawave.changes.map.set 'lobby', []
 
       ultrawave._applyRemoteChange 'lobby', clock, 'set', args
@@ -50,7 +53,7 @@ describe 'Ultrawave:', ->
 
       ultrawave = new Ultrawave "ws:localhost"
 
-      clock = new VectorClock 0, {0: 2}
+      clock = new VectorClock id: 'a', a: 2
       args = [1,2]
 
       handle =
@@ -58,8 +61,8 @@ describe 'Ultrawave:', ->
         set: -> throw new Error 'this should not be called'
 
       ultrawave.handles.set 'lobby', handle
-      ultrawave.clocks.set 'lobby', new VectorClock 0, {0: 3}
-      ultrawave.changes.map.set 'lobby', [[{}, {id: 0, 0: 2}, 'set', [1,2]]]
+      ultrawave.clocks.set 'lobby', new VectorClock id: 'a', a: 3
+      ultrawave.changes.map.set 'lobby', [[{}, {id: 'a', a: 2}, 'set', [1,2]]]
 
       ultrawave._applyRemoteChange 'lobby', clock, 'set', args
 
@@ -70,8 +73,8 @@ describe 'Ultrawave:', ->
       ultrawave = new Ultrawave "ws:localhost"
 
       changes = [
-        [{}, {id: 0, 0: 1}, 'set', [0,1]]
-        [{}, {id: 0, 0: 3}, 'set', [1,1]]
+        [{}, {id: 'a', a: 1}, 'set', [0,1]]
+        [{}, {id: 'a', a: 3}, 'set', [1,1]]
       ]
 
       setCalls = 0
@@ -96,10 +99,10 @@ describe 'Ultrawave:', ->
             done()
 
       ultrawave.handles.set 'lobby', handle
-      ultrawave.clocks.set 'lobby', new VectorClock 0, {0: 3}
+      ultrawave.clocks.set 'lobby', new VectorClock id: 'a', a: 3
       ultrawave.changes.map.set 'lobby', changes
 
-      clock = new VectorClock 0, {0: 2}
+      clock = new VectorClock id: 'a', a: 2
       ultrawave._applyRemoteChange 'lobby', clock, 'set', [1, 2]
 
 
@@ -114,22 +117,34 @@ describe 'Ultrawave:', ->
           assert.equal value, 3
 
       ultrawave.handles.set 'lobby', handle
-      ultrawave.clocks.set 'lobby', new VectorClock 'a', {a: 1, b: 0}
+      ultrawave.clocks.set 'lobby', new VectorClock id: 'b', a: 1, b: 0
       ultrawave.changes.map.set 'lobby', [
-        [{}, {id: 'a', a: 1, b: 0}, 'set', [1,2]]
+        [{}, {id: 'b', a: 1, b: 0}, 'set', [1,2]]
       ]
 
-      ultrawave._applyRemoteChange 'lobby', {id: 'b', a: 0, b: 1}, 'set', [1,3]
+      clock = new VectorClock id: 'a', a: 0, b: 1
+      ultrawave._applyRemoteChange 'lobby', clock, 'set', [1,3]
 
 
   describe 'when a peer requests a document', ->
 
     it 'the peer should send "request document" to the first peer it
-        connects to', ->
+        connects to', (done) ->
 
       server = new GroupServer port += 1
-      client = new Ultrawave "ws:localhost:#{port}"
 
+      client1 = new Ultrawave "ws:localhost:#{port}"
+      client2 = new Ultrawave "ws:localhost:#{port}"
+
+      client1.peerGroup.on 'request document', -> done()
+
+      client1
+        .create('lobby', {}, ->)
+        .then ->
+          client2.join 'lobby', ->
+        .catch (e) ->
+          console.log 'ERROR'
+          console.log e.stack
 
 
     it 'the peer receiving "request document" should respond with "document",

@@ -78,11 +78,13 @@ class PeerGroup {
       })
     }
 
-
-    this.ws.on('open', () => {
-      log('ws opened')
-      this.open = true
-      this.trigger(this.events.open, this)
+    this.ready = new Promise((resolve) => {
+      this.ws.on('open', () => {
+        log('ws opened')
+        resolve()
+        this.open = true
+        this.trigger(this.events.open, this)
+      })
     })
 
     this.ws.on('close', () => {

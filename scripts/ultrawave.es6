@@ -23,11 +23,12 @@ module.exports = class Ultrawave {
 
     this.peerGroup.on('request document', (group, id) => {
       const data = this.handles.get(group).data()
-      const changes = this.changes.get(group)
+      const clock = this.clocks.get(group)
       this.peerGroup.sendTo(group, id, 'document', {clock: clock, data: data})
     })
 
     this.peerGroup.on('request changes', (group, id, latest) => {
+      const changes = this.changes.get(group)
       for (let i = changes.length - 1; i >= 0; i -= 1) {
         const [, clock, method, args] = changes[i]
         if (latest.laterThan(clock)) return
@@ -53,6 +54,7 @@ module.exports = class Ultrawave {
     const methods = ['set', 'delete', 'merge', 'splice']
     methods.forEach((method) => {
       this.peerGroup.on(method, (group, id, {clock, args}) => {
+        clock = new VectorClock(clock)
         this._clearTimeoutFor(group, clock)
         this._syncMissingChangesFor(id, group, clock)
         this._updateClock(group, clock)
@@ -63,7 +65,7 @@ module.exports = class Ultrawave {
   }
 
 
-  clearTimeoutFor(group, clock) {
+  _clearTimeoutFor(group, clock) {
     const author = clock.id
     const tick = clock[author]
     const pendingTimeout = this.timeouts.get(group, author, tick)
@@ -74,7 +76,7 @@ module.exports = class Ultrawave {
   }
 
 
-  syncMissingChangesFor(sender, group, clock) {
+  _syncMissingChangesFor(sender, group, clock) {
 
     // compare clock to the current clock to identify any missing messages
 
@@ -126,11 +128,6 @@ module.exports = class Ultrawave {
     const changes = this.changes.get(group)
     const handle = this.handles.get(group)
 
-    // make sure clock is a vector clock
-    if (!(clock instanceof VectorClock)) {
-      clock = new VectorClock(clock.id, clock)
-    }
-
     // if the change is in order, apply it right away and return
     if (clock.laterThan(this.clocks.get(group))) {
       handle[method].apply(null, args)
@@ -164,14 +161,14 @@ module.exports = class Ultrawave {
   }
 
 
-  startCursor(group, initialData, cb) {
+  _startCursor(group, initialData, cb) {
     const clock = this.clocks.get(group)
 
     const changes = []
-    this.changes.set(group, changes)
+    this.changes.map.set(group, changes)
 
     const handle = Cursor.create(initialData, (root, newChanges) => {
-      const data = handle.data()
+      const data = root.get()
       for (let change of newChanges) {
         const [method, args] = change
         clock.increment()
@@ -189,10 +186,12 @@ module.exports = class Ultrawave {
 
   create(group, initialData, cb) {
     return new Promise((resolve, reject) => {
-      this.peerGroup.create(group).then(() => {
-        this.clocks(group).set(new VectorClock(this.peerGroup.id))
-        resolve(this.startCursor(group, initialData, cb))
-      }).catch(reject)
+      this.peerGroup.ready.then(() => {
+        this.peerGroup.create(group).then(() => {
+          this.clocks.set(group, new VectorClock({id: this.peerGroup.id}))
+          resolve(this._startCursor(group, initialData, cb))
+        }).catch(reject)
+      })
     })
   }
 
@@ -201,78 +200,80 @@ module.exports = class Ultrawave {
     const events = this.peerGroup.events
 
     return new Promise((resolve, reject) => {
-      this.peerGroup.join(group).then(() => {
-        // request the current document state from the first peer we form a
-        // connection to, then send 'request changes' to each new peer
-        // requesting changes they have authored after that clock.
-        const documentRequestCandidates = []
-        let documentRequestTimeout
-        let changeRequestCandidates
-        let documentClock
+      this.peerGroup.ready.then(() => {
+        this.peerGroup.join(group).then(() => {
+          // request the current document state from the first peer we form a
+          // connection to, then send 'request changes' to each new peer
+          // requesting changes they have authored after that clock.
+          const docRequestCandidates = []
+          let docRequestTimeout
+          let changeRequestCandidates
+          let documentClock
 
-        const requestDocumentRetry = () => {
-           if (documentRequestCandidates.length > 0) {
-            const peer = documentRequestCandidates.shift()
-            this.peerGroup.sendTo(group, peer, 'request document')
-          }
-
-          documentRequestTimeout = setTimeout(requestDocumentRetry, interval)
-        }
-
-        const onPeer = (subjectGroup, id) => {
-          if (subjectGroup !== group) return
-
-          if (documentRequestTimeout == null) {
-
-            // request the document immediately from the first peer
-
-            this.peerGroup.sendTo(group, id, 'request document')
-            documentRequestTimeout = setTimeout(requestDocumentRetry, interval)
-
-          } else if (documentClock == null) {
-
-            // if the document has not been received, keep track of peers in
-            // case we need to request the document from them
-
-            documentRequestCandidates.push(id)
-
-          } else if (changeRequestCandidates.has(id)) {
-
-            // once the document has been recevied, request changes from peers
-            // as we connect to them
-
-            this.peerGroup.send(group, id, 'request changes', documentClock)
-            changeRequestCandidates.delete(id)
-
-            if (changeRequestCandidates.size === 0) {
-              this.peerGroup.off(events.peer, onPeer)
+          const requestDocumentRetry = () => {
+             if (docRequestCandidates.length > 0) {
+              const peer = docRequestCandidates.shift()
+              this.peerGroup.sendTo(group, peer, 'request document')
             }
 
+            docRequestTimeout = setTimeout(requestDocumentRetry, interval)
           }
-        }
 
-        const onDocument = (subjectGroup, id, {clock, data}) => {
-          if (subjectGroup !== group) return
-          this.peerGroup.off(events.document, onDocument)
-          clearTimeout(documentRequestTimeout)
+          const onPeer = (subjectGroup, id) => {
+            if (subjectGroup !== group) return
 
-          documentClock = clock
-          changeRequestCandidates = new Set(clock.keys())
+            if (docRequestTimeout == null) {
 
-          // request changes from all group members
-          for (peer of this.peerGroup.peers(group)) {
-            if (changeRequestCandidates.delete(peer)) {
-              this.peerGroup.send(group, 'request changes', clock)
+              // request the document immediately from the first peer
+
+              this.peerGroup.sendTo(group, id, 'request document')
+              docRequestTimeout = setTimeout(requestDocumentRetry, interval)
+
+            } else if (documentClock == null) {
+
+              // if the document has not been received, keep track of peers in
+              // case we need to request the document from them
+
+              docRequestCandidates.push(id)
+
+            } else if (changeRequestCandidates.has(id)) {
+
+              // once the document has been recevied, request changes from
+              // peers as we connect to them
+
+              this.peerGroup.send(group, id, 'request changes', documentClock)
+              changeRequestCandidates.delete(id)
+
+              if (changeRequestCandidates.size === 0) {
+                this.peerGroup.off(events.peer, onPeer)
+              }
+
             }
           }
 
-          resolve(this.startCursor(group, data, cb))
-        }
+          const onDocument = (subjectGroup, id, {clock, data}) => {
+            if (subjectGroup !== group) return
+            this.peerGroup.off(events.document, onDocument)
+            clearTimeout(docRequestTimeout)
 
-        this.peerGroup.on(events.peer, onPeer)
-        this.peerGroup.on('document', onDocument)
+            documentClock = new VectorClock(clock)
+            changeRequestCandidates = new Set(documentClock.keys())
 
-      }).catch(reject)
+            // request changes from all group members
+            for (let peer of this.peerGroup.peers(group)) {
+              if (changeRequestCandidates.delete(peer)) {
+                this.peerGroup.send(group, 'request changes', clock)
+              }
+            }
+
+            resolve(this._startCursor(group, data, cb))
+          }
+
+          this.peerGroup.on(events.peer, onPeer)
+          this.peerGroup.on('document', onDocument)
+
+        }).catch(reject)
+      })
     })
   }
 

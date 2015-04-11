@@ -1,27 +1,23 @@
 module.exports = class VectorClock {
 
-  constructor(id, clock) {
-    this.id = id
+  constructor(clock) {
+    if (clock == null || clock.id == null) {
+      throw new Error('vector clock must have id')
+    }
 
-    if (arguments.length > 1) {
-      if (!clock instanceof VectorClock) {
-        clock = new VectorClock(clock.id, clock)
-      }
-      for (let key of Object.keys(clock)) {
-        if (key === 'id') continue
-        this[key] = clock[key]
-      }
+    for (let key of Object.keys(clock)) {
+      this[key] = clock[key]
     }
 
     this[this.id] = this[this.id] || 0
   }
 
   clone() {
-    return new VectorClock(this.id, this)
+    return new VectorClock(this)
   }
 
   keys() {
-    results = []
+    const results = []
     for (let key of Object.keys(this)) {
       if (key === 'id') continue
       results.push(key)
