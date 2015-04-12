@@ -132,7 +132,6 @@ describe 'Ultrawave:', ->
         connects to', (done) ->
 
       server = new GroupServer port += 1
-
       client1 = new Ultrawave "ws:localhost:#{port}"
       client2 = new Ultrawave "ws:localhost:#{port}"
 
@@ -142,19 +141,59 @@ describe 'Ultrawave:', ->
         .create('lobby', {}, ->)
         .then ->
           client2.join 'lobby', ->
-        .catch (e) ->
-          console.log 'ERROR'
-          console.log e.stack
-
 
     it 'the peer receiving "request document" should respond with "document",
-        its current document state, and its clock', ->
+        its current document state, and its clock', (done) ->
+
+      server = new GroupServer port += 1
+      client1 = new Ultrawave "ws:localhost:#{port}"
+      client2 = new Ultrawave "ws:localhost:#{port}"
+
+      client2.peerGroup.on 'document', -> done()
+
+      client1
+        .create('lobby', {}, ->)
+        .then -> client2.join 'lobby', ->
 
     it 'the peer should send "request changes" to each other peer with the clock
-        it received from the first peer', ->
+        it received from the first peer', (done) ->
+
+      server = new GroupServer port += 1
+      client1 = new Ultrawave "ws:localhost:#{port}"
+      client2 = new Ultrawave "ws:localhost:#{port}"
+      client3 = new Ultrawave "ws:localhost:#{port}"
+
+      # we don't know who will send the document request, so one of these two
+      # peers will get request changes
+      client1.peerGroup.on 'request changes', -> done()
+      client2.peerGroup.on 'request changes', -> done()
+
+      client1
+        .create('lobby', {}, ->)
+        .then -> client2.join('lobby', ->)
+        .then -> client3.join('lobby', ->)
 
     it 'peers receiving "request changes" should send any changes they have made
-        after the attached clock to the requsting peer', ->
+        after the attached clock to the requsting peer', (done) ->
+
+      server = new GroupServer port += 1
+      client = new Ultrawave "ws:localhost:#{port}"
+
+      client.create('lobby', {}, ->).then ->
+        clock = {id: 'a', a: 1}
+        method = 'set'
+        args = []
+
+        client.changes.set 'lobby', [{}, clock, method, args]
+
+        client.peerGroup.sendTo = (group, id, type, payload) ->
+          assert.equal group, 'lobby'
+          assert.equal id, 1
+          assert.equal type, method
+          assert.deepEqual payload, {clock, args}
+          done()
+
+        client.peerGroup.trigger 'request changes', 'lobby', 1, {id: 'b', a: 0}
 
 
   describe 'when a peer makes a change to a document', ->

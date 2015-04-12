@@ -30,6 +30,12 @@ module.exports = class VectorClock {
     return this
   }
 
+  touch(key) {
+    if (this[key] == null) {
+      this[key] = 0
+    }
+  }
+
   update(clock) {
     for (let key of Object.keys(clock)) {
       if (key === 'id') continue

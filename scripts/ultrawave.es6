@@ -19,6 +19,16 @@ module.exports = class Ultrawave {
     this.timeouts = new MapMapMap
 
 
+    // add peers to clock immediately
+
+    this.peerGroup.on(this.peerGroup.events.peer, (group, id) => {
+      const clock = this.clocks.get(group)
+      if (clock != null) {
+        clock.touch(id)
+      }
+    })
+
+
     // respond to requests from peers
 
     this.peerGroup.on('request document', (group, id) => {
@@ -247,7 +257,6 @@ module.exports = class Ultrawave {
               if (changeRequestCandidates.size === 0) {
                 this.peerGroup.off(events.peer, onPeer)
               }
-
             }
           }
 
@@ -258,6 +267,7 @@ module.exports = class Ultrawave {
 
             documentClock = new VectorClock(clock)
             changeRequestCandidates = new Set(documentClock.keys())
+            changeRequestCandidates.delete(documentClock.id)
 
             // request changes from all group members
             for (let peer of this.peerGroup.peers(group)) {
