@@ -14,15 +14,7 @@ GroupServer.log = false
 events = PeerGroup::events
 
 
-port = 5500
-
-
-
-setupRoom = (peers, roomName, callback) ->
-  remainingPeers = peers.length * (peers.length - 1)
-  peers.forEach (peer) ->
-    peer.on events.start, -> peer.joinOrCreate roomName
-    peer.on events.peer, -> callback() if (remainingPeers -= 1) is 0
+port = 5100
 
 
 describe 'Ultrawave:', ->
