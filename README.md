@@ -27,14 +27,14 @@ peer = new Ultrawave('ws://localhost:5000')
 
 Create a group by providing a group name, some initial data, and a callback to handle changes.  Whenever the data is updated, locally or by a peer, your callback will be passed a root *'cursor'* which it can use to read or write data.
 
-```javascript
+```jsx
 peer.create(group, data, (cursor) => {
   React.render(<Component cursor={cursor}>, el)
 })
 ```
 You can also join an existing group by name.
 
-```javascript
+```jsx
 peer.join(group, (cursor) => {
   React.render(<Component cursor={cursor}>, el)
 })
@@ -52,7 +52,7 @@ Data in Ultrawave is represented as a 'document' - a tree structure where nodes 
 
 A cursor is a pointer to one node at a specific path in the tree, and has methods to read and write to its subtree.  For example, this creates a simple chatroom
 
-```javascript
+```jsx
 const Chat = React.createClass({
   getInitialState: function() {
     return {message: ''}
@@ -61,9 +61,9 @@ const Chat = React.createClass({
     return (
       <div>
         {
-          cursor.get('messages').map((message) =>
+          this.props.cursor.get('messages').map((message) => {
             <p>{message}</p>
-          )
+          })
         }
         <input
           value={this.state.message}
