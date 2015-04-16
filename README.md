@@ -3,10 +3,6 @@
 Ultrawave is small library for shared state using peer to peer messaging over WebRTC data channels.  Ultrawave makes it easy to build things like real time collaborative editing, communication, and games.  It works great with, but is not tied to, React.js.
 
 
-
-## Usage
-
-
 ### Creating a new ultrawave
 
 WebRTC allows direct communication between peers, but requires a server to form the initial connections.  You can run a simple websocket server for peering by creating an instance of UltrawaveServer
@@ -85,7 +81,4 @@ peer.create('chatroom', {messages: []}, (cursor) => {
 })
 ```
 
-Every peer connects to all of the other peers in its group, and sends any changes made through its cursors to all member of its peer group.  Because it is difficult to synchronize clocks, and messages can be lost or received out of order or can be lost, [vector clocks](//en.wikipedia.org/wiki/Vector_clock) are used to create an ordering so that the document state will be eventually consistant across peers.
-
-Under the hood, peering and messaging over RTC data channels is handled by the [peergroup]() package, and data modeling uses the [cursor](//github.com/charlieschwabacher/cursor) package.
-
+Every peer connects to all of the other peers in its group, and sends any changes made through its cursors to all member of its peer group.  Because it is difficult to synchronize clocks, and messages can be lost or received out of order or can be lost, [vector clocks](//en.wikipedia.org/wiki/Vector_clock) are used for ordering so that the document state will be eventually consistant across peers.
