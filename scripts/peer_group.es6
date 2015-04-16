@@ -78,13 +78,10 @@ class PeerGroup {
       })
     }
 
-    this.ready = new Promise((resolve) => {
-      this.ws.on('open', () => {
-        log('ws opened')
-        resolve()
-        this.open = true
-        this.trigger(this.events.open, this)
-      })
+    this.ws.on('open', () => {
+      log('ws opened')
+      this.open = true
+      this.trigger(this.events.open, this)
     })
 
     this.ws.on('close', () => {
@@ -93,10 +90,13 @@ class PeerGroup {
       this.trigger(this.events.close, this)
     })
 
-    this.ws.on('start', (id) => {
-      log('ws started')
-      this.id = id
-      this.trigger(this.events.start, this)
+    this.ready = new Promise((resolve) => {
+      this.ws.on('start', (id) => {
+        log('ws started')
+        resolve(id)
+        this.id = id
+        this.trigger(this.events.start, this)
+      })
     })
 
     this.ws.on('request offer', ({group, from}) => {
@@ -298,7 +298,9 @@ class PeerGroup {
   trigger(type, ...args) {
     const handlers = this.handlers.get(type)
     if (handlers != null) {
-      handlers.forEach((handler) => handler.apply(null, args))
+      handlers.forEach((handler) => {
+        handler.apply(null, args)
+      })
     }
   }
 

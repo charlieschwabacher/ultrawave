@@ -1,5 +1,2 @@
 node_modules
 .DS_Store
-.awspublish-*
-public/index.css
-public/index.js

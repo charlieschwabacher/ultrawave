@@ -133,6 +133,7 @@ describe 'Ultrawave:', ->
         .create('lobby', {}, ->)
         .then ->
           client2.join 'lobby', ->
+        .catch done
 
     it 'the peer receiving "request document" should respond with "document",
         its current document state, and its clock', (done) ->
@@ -146,6 +147,7 @@ describe 'Ultrawave:', ->
       client1
         .create('lobby', {}, ->)
         .then -> client2.join 'lobby', ->
+        .catch done
 
     it 'the peer should send "request changes" to each other peer with the clock
         it received from the first peer', (done) ->
@@ -164,6 +166,7 @@ describe 'Ultrawave:', ->
         .create('lobby', {}, ->)
         .then -> client2.join('lobby', ->)
         .then -> client3.join('lobby', ->)
+        .catch done
 
     it 'peers receiving "request changes" should send any changes they have made
         after the attached clock to the requsting peer', (done) ->
@@ -171,55 +174,116 @@ describe 'Ultrawave:', ->
       server = new GroupServer port += 1
       client = new Ultrawave "ws:localhost:#{port}"
 
-      client.create('lobby', {}, ->).then ->
-        clock = {id: 'a', a: 1}
-        method = 'set'
-        args = []
+      client.create('lobby', {}, ->)
+        .then ->
+          clock = {id: client.peerGroup.id, a: 1}
+          method = 'set'
+          args = []
 
-        client.changes.set 'lobby', [{}, clock, method, args]
+          client.changes.map.set('lobby', [[{}, clock, method, args]])
 
-        client.peerGroup.sendTo = (group, id, type, payload) ->
-          assert.equal group, 'lobby'
-          assert.equal id, 1
-          assert.equal type, method
-          assert.deepEqual payload, {clock, args}
-          done()
+          client.peerGroup.sendTo = (group, id, type, payload) ->
+            assert.equal group, 'lobby'
+            assert.equal id, 1
+            assert.equal type, method
+            assert.deepEqual payload, {clock, args}
+            done()
 
-        client.peerGroup.trigger 'request changes', 'lobby', 1, {id: 'b', a: 0}
+          client.peerGroup.trigger 'request changes', 'lobby', 1, {id: 'b', a: 0}
+
+        .catch done
 
 
   describe 'when a peer makes a change to a document', ->
 
-    it 'the peer should increment its vector clock', ->
+    it 'the peer should increment its vector clock', (done) ->
 
-    it 'the peer should make the change locally', ->
+      server = new GroupServer port += 1
+      client = new Ultrawave "ws:localhost:#{port}"
 
-    it 'the peer should add the change and clock to its list of changes', ->
+      root = null
+
+      client
+        .create 'lobby', {}, (_root) -> root = _root
+        .then ->
+          clock = client.clocks.get('lobby')
+          assert.equal clock[clock.id], 0
+          root.set 'a', 1
+          setTimeout ->
+            assert.equal clock[clock.id], 1
+            done()
+
+        .catch done
+
+    it 'the peer should make the change locally', (done) ->
+
+      server = new GroupServer port += 1
+      client = new Ultrawave "ws:localhost:#{port}"
+
+      root = null
+
+      client
+        .create 'lobby', {}, (_root) -> root = _root
+        .then (handle) ->
+          root.set 'a', 1
+          assert.equal handle.data().a, 1
+          done()
+
+        .catch done
+
+    it 'the peer should add the change and clock to its list of
+        changes', (done) ->
+
+      server = new GroupServer port += 1
+      client = new Ultrawave "ws:localhost:#{port}"
+
+      root = null
+
+      client
+        .create 'lobby', {}, (_root) -> root = _root
+        .then (handle) ->
+          changes = client.changes.get('lobby')
+          assert.equal changes.length, 0
+          root.set 'a', 1
+          setTimeout ->
+            assert.equal changes.length, 1
+            [data, clock, method, args] = changes[0]
+            assert.equal data, handle.data()
+            assert.equal method, 'set'
+            assert.deepEqual args, [['a'], 1]
+            done()
+
+        .catch done
 
     it 'the peer should send "change" with the method, data, and clock to each
-        other peer', ->
+        other peer', (done) ->
+
+      server = new GroupServer port += 1
+      client1 = new Ultrawave "ws:localhost:#{port}"
+      client2 = new Ultrawave "ws:localhost:#{port}"
+      client3 = new Ultrawave "ws:localhost:#{port}"
+
+      client1Root = null
+
+      received = 0
+      markReceived = ->
+        received += 1
+        done() if received is 2
+
+      client2.peerGroup.on 'set', markReceived
+      client3.peerGroup.on 'set', markReceived
+
+      client1
+        .create 'lobby', {}, (root) -> client1Root = root
+        .then -> client2.join 'lobby', ->
+        .then -> client3.join 'lobby', ->
+        .then ->
+          client1Root.set 'a', 1
+        .catch done
 
 
-  describe 'when a peer gets a message indicating a change to the document', ->
-
-    describe 'and the incoming clock is later than the current clock,', ->
-
-      it 'the peer should apply the change', ->
-
-      it 'the peer should add the change and clock to its list of changes', ->
-
-      it 'the peer should update its clock', ->
-
-    describe 'and the incoming clock is earlier than the current clock,', ->
-
-      it 'the peer should rewind and apply changes in order', ->
-
-      it 'the peer should add the change in place to its list of changes', ->
-
-      it 'the peer should resolve conflicts in favor of the author with the
-          lowest id', ->
-
-    describe 'and the incoming clock indicates a missed message', ->
+  describe 'when a peer gets a message with a clock indicating a missed
+            message', (done) ->
 
       it 'after a timeout, the peer should send a "request sync" message to the
           peer who made the last with the missing author id and clock ticks', ->

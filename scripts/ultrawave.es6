@@ -12,64 +12,76 @@ const interval = 200
 module.exports = class Ultrawave {
 
   constructor(url) {
-    this.peerGroup = new PeerGroup(url)
     this.handles = new Map
     this.clocks = new Map
     this.changes = new MapArray // arrays of changes [data, clock, method, args]
     this.timeouts = new MapMapMap
+    this.peerGroup = new PeerGroup(url)
+
+    // wait for id to be assigned by server before binding to other events
+
+    this.peerGroup.ready.then((id) => {
+
+      this.id = id
 
 
-    // add peers to clock immediately
+      // add peers to clock immediately
 
-    this.peerGroup.on(this.peerGroup.events.peer, (group, id) => {
-      const clock = this.clocks.get(group)
-      if (clock != null) {
-        clock.touch(id)
-      }
-    })
-
-
-    // respond to requests from peers
-
-    this.peerGroup.on('request document', (group, id) => {
-      const data = this.handles.get(group).data()
-      const clock = this.clocks.get(group)
-      this.peerGroup.sendTo(group, id, 'document', {clock: clock, data: data})
-    })
-
-    this.peerGroup.on('request changes', (group, id, latest) => {
-      const changes = this.changes.get(group)
-      for (let i = changes.length - 1; i >= 0; i -= 1) {
-        const [, clock, method, args] = changes[i]
-        if (latest.laterThan(clock)) return
-        if (clock.id === this.peerGroup.id) {
-          this.peerGroup.sendTo(group, id, method, {clock: clock, args: args})
+      this.peerGroup.on(this.peerGroup.events.peer, (group, id) => {
+        const clock = this.clocks.get(group)
+        if (clock != null) {
+          clock.touch(id)
         }
-      }
-    })
-
-    this.peerGroup.on('request sync', (group, id, {author, tick}) => {
-      for (let i = changes.length - 1; i >= 0; i -= 1) {
-        let [clock, method, args] = changes[i]
-        if (clock.id === author && clock[author] == tick) {
-          this.peerGroup.sendTo(group, id, method, {clock: clock, args: args})
-          break
-        }
-      }
-    })
-
-
-    // apply changes from peers
-
-    const methods = ['set', 'delete', 'merge', 'splice']
-    methods.forEach((method) => {
-      this.peerGroup.on(method, (group, id, {clock, args}) => {
-        clock = new VectorClock(clock)
-        this._clearTimeoutFor(group, clock)
-        this._syncMissingChangesFor(id, group, clock)
-        this._updateClock(group, clock)
-        this._applyRemoteChange(group, clock, method, args)
       })
+
+
+      // respond to requests from peers
+
+      this.peerGroup.on('request document', (group, id) => {
+        const data = this.handles.get(group).data()
+        const clock = this.clocks.get(group)
+        this.peerGroup.sendTo(group, id, 'document', {clock: clock, data: data})
+      })
+
+
+      this.peerGroup.on('request changes', (group, id, latest) => {
+        latest = new VectorClock(latest)
+        const changes = this.changes.get(group)
+        for (let i = changes.length - 1; i >= 0; i -= 1) {
+          const [, clock, method, args] = changes[i]
+          if (latest.laterThan(clock)) return
+          if (clock.id === this.id) {
+            this.peerGroup.sendTo(group, id, method, {clock: clock, args: args})
+          }
+        }
+      })
+
+
+      this.peerGroup.on('request sync', (group, id, {author, tick}) => {
+        for (let i = changes.length - 1; i >= 0; i -= 1) {
+          let [clock, method, args] = changes[i]
+          if (clock.id === author && clock[author] == tick) {
+            this.peerGroup.sendTo(group, id, method, {clock: clock, args: args})
+            break
+          }
+        }
+      })
+
+
+
+      // apply changes from peers
+
+      const methods = ['set', 'delete', 'merge', 'splice']
+      methods.forEach((method) => {
+        this.peerGroup.on(method, (group, id, {clock, args}) => {
+          clock = new VectorClock(clock)
+          this._clearTimeoutFor(group, clock)
+          this._syncMissingChangesFor(id, group, clock)
+          this._applyRemoteChange(group, clock, method, args)
+          this._updateClock(group, clock)
+        })
+      })
+
     })
 
   }
@@ -94,7 +106,7 @@ module.exports = class Ultrawave {
 
     for (let id in clock) {
       const tick = clock[id]
-      const latest = currentClock[id]
+      const latest = author[id]
 
       if (tick - (latest || 0) > 1) {
         for (let i = latest + 1; i < tick; i++) {
@@ -196,9 +208,9 @@ module.exports = class Ultrawave {
 
   create(group, initialData, cb) {
     return new Promise((resolve, reject) => {
-      this.peerGroup.ready.then(() => {
+      this.peerGroup.ready.then((id) => {
         this.peerGroup.create(group).then(() => {
-          this.clocks.set(group, new VectorClock({id: this.peerGroup.id}))
+          this.clocks.set(group, new VectorClock({id: id}))
           resolve(this._startCursor(group, initialData, cb))
         }).catch(reject)
       })
@@ -210,8 +222,10 @@ module.exports = class Ultrawave {
     const events = this.peerGroup.events
 
     return new Promise((resolve, reject) => {
-      this.peerGroup.ready.then(() => {
+      this.peerGroup.ready.then((id) => {
         this.peerGroup.join(group).then(() => {
+          this.clocks.set(group, new VectorClock({id: id}))
+
           // request the current document state from the first peer we form a
           // connection to, then send 'request changes' to each new peer
           // requesting changes they have authored after that clock.
@@ -265,11 +279,12 @@ module.exports = class Ultrawave {
             this.peerGroup.off(events.document, onDocument)
             clearTimeout(docRequestTimeout)
 
-            documentClock = new VectorClock(clock)
-            changeRequestCandidates = new Set(documentClock.keys())
-            changeRequestCandidates.delete(documentClock.id)
+            clock = new VectorClock(clock)
+            this._updateClock(group, clock)
 
             // request changes from all group members
+            changeRequestCandidates = new Set(clock.keys())
+            changeRequestCandidates.delete(clock.id)
             for (let peer of this.peerGroup.peers(group)) {
               if (changeRequestCandidates.delete(peer)) {
                 this.peerGroup.send(group, 'request changes', clock)
