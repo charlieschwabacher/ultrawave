@@ -56,7 +56,7 @@ Changes are made through 'cursors' - objects that wrap the path to a specific no
 Because messages can be lost or received out of order, [vector clocks](//en.wikipedia.org/wiki/Vector_clock) are used to create an ordering for changes, so that the document state will be eventually consistant between peers.
 
 
-### Chat Example
+### Example
 
 Here is an example of a simple chat app built with Ultrawave - it initializes the data with the object `{messages: []}`, and then when data changes it renders a react component, passing a root cursor as a prop.  The react component reads data through the cursor to render the messages.  When the button is clicked, it updates data through the cursor, pushing a new message onto the messages array and causing it to be sent to each peer.
 
@@ -84,7 +84,6 @@ peer.create('chatroom', {messages: []}, (cursor) => {
   React.render(<Chat cursor={cursor}/>, document.body)
 })
 ```
-
 
 
 ### About
