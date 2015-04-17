@@ -1,6 +1,6 @@
 # Ultrawave
 
-Ultrawave is a library enabling shared state between peers over WebRTC data channels.  Ultrawave makes it easy to build things like real time collaborative editing, messaging, and games.  It works great with, but is not tied to, [React](//github.com/facebook/react).
+Ultrawave is a library enabling shared state through direct communication between peers over WebRTC data channels.  Ultrawave makes it easy to build things like real time collaborative editing, messaging, and games.  It works great with, but is not tied to, [React](//github.com/facebook/react).
 
 
 ### Creating a new ultrawave
