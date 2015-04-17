@@ -3,7 +3,7 @@
 Ultrawave is a library enabling shared state through direct communication between peers over WebRTC data channels.  Ultrawave makes it easy to build things like real time collaborative editing, messaging, and games.  It works great with, but is not tied to, [React](//github.com/facebook/react).
 
 
-## Installation
+### Installation
 
 Grab the library from npm: `npm install ultrawave`
 
