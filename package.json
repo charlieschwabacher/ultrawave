@@ -1,14 +1,14 @@
 {
   "name": "ultrawave",
   "description": "share data between clients over WebRTC data channels",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "keywords": [
     "ultrawave"
   ],
   "license": "MIT",
   "author": "Charlie Schwabacher: <coschwabacher@gmail.com>",
   "scripts": {
-    "build": "browserify ./src/cursor.js -t babelify --outfile ./index.js",
+    "build": "babel src --out-dir lib",
     "test": "mocha"
   },
   "repository": {
