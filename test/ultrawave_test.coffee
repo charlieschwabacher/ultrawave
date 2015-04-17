@@ -1,18 +1,20 @@
 # mock browser environment
 
 global.WebSocket = require 'ws'
-global.window = require './rtc_mocks'
+global.window = require 'rtc-mocks'
 
 # require dependancies
 
 assert = require 'assert'
-GroupServer = require '../server/group_server'
-PeerGroup = require '../scripts/peer_group'
+GroupServer = require 'peergroup/lib/group_server'
+PeerGroup = require 'peergroup'
 Ultrawave = require '../scripts/ultrawave'
 VectorClock = require '../scripts/vector_clock'
-GroupServer.log = false
-events = PeerGroup::events
 
+PeerGroup.log = false
+GroupServer.log = false
+
+events = PeerGroup::events
 
 port = 5100
 

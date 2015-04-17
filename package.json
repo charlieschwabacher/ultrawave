@@ -2,12 +2,14 @@
   "name": "ultrawave",
   "description": "share data between clients over WebRTC data channels",
   "version": "0.0.0",
-  "keywords": ["ultrawave"],
+  "keywords": [
+    "ultrawave"
+  ],
   "license": "MIT",
   "author": "Charlie Schwabacher: <coschwabacher@gmail.com>",
   "scripts": {
-    "build": "",
-    "test": ""
+    "build": "browserify ./src/cursor.js -t babelify --outfile ./index.js",
+    "test": "mocha"
   },
   "repository": {
     "type": "git",
@@ -22,19 +24,16 @@
     "server.js"
   ],
   "dependencies": {
+    "cursor": "https://github.com/charlieschwabacher/cursor.git",
+    "peergroup": "0.0.0",
+    "rtc-mocks": "0.0.0",
+    "subtree": "0.0.1",
     "ws": "^0.7.1"
   },
   "devDependencies": {
     "babel": "^5.0.7",
     "coffee-script": "^1.8.0",
-    "browserify": "^5.9.1",
-    "gulp": "^3.8.9",
-    "gulp-streamify": "0.0.5",
-    "gulp-uglify": "^1.1.0",
     "mocha": "^2.2.1",
-    "vinyl-source-stream": "^1.0.0"
-  },
-  "browserify": {
-    "transform"
+    "ws": "^0.7.1"
   }
 }

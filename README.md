@@ -1,6 +1,6 @@
 # Ultrawave
 
-Ultrawave is a small library for shared state between peers using messaging over WebRTC data channels.  Ultrawave makes it easy to build things like real time collaborative editing, messaging, and games.  It works great with, but is not tied to, React.js.
+Ultrawave is a library enabling shared state between peers over WebRTC data channels.  Ultrawave makes it easy to build things like real time collaborative editing, messaging, and games.  It works great with, but is not tied to, React.js.
 
 
 ### Creating a new ultrawave
@@ -46,16 +46,14 @@ peer.leave(group)
 
 Data in Ultrawave is represented as a 'document' - a tree structure where nodes are either arrays or objects.  Changes are represented as the path to the node to be modified, a method, and arguemnts.  Methods on objects are 'set', 'delete', and 'merge', and on arrays are 'set', 'delete', and 'splice' (and shortcuts based on splice: 'push', 'pop', 'shift' and 'unshift').
 
-Changes are made through 'cursors' - objects that wrap the path to a specific node, and provide methods to read and write to that node and its subtree.  Every peer connects to all of the other peers in its group, and sends any changes made through its cursors each of its peers.
+Changes are made through 'cursors' - objects that wrap the path to a specific node, and provide methods to read and write to that node and its subtree.  Every peer connects to every other peers in its group, and sends any changes made through its cursors to each of its peers.
 
-Because messages can be lost or received out of order, [vector clocks](//en.wikipedia.org/wiki/Vector_clock) are used to create an ordering so that the document state will be eventually consistant across peers.
+Because messages can be lost or received out of order, [vector clocks](//en.wikipedia.org/wiki/Vector_clock) are used to create an ordering for changes, so that the document state will be eventually consistant between peers.
 
 
 ### Chat Example
 
-Here is an example of a simple chat app built with Ultrawave - it initializes the data with the object `{messages: []}`, and then when data changes it renders a react component, passing a root cursor as a prop.  The react component reads data
-through the cursor to render the messages.  When the button is clicked, it updates
-data through the cursor, pushing a new message onto the messages array and causing it to be sent to each peer.
+Here is an example of a simple chat app built with Ultrawave - it initializes the data with the object `{messages: []}`, and then when data changes it renders a react component, passing a root cursor as a prop.  The react component reads data through the cursor to render the messages.  When the button is clicked, it updates data through the cursor, pushing a new message onto the messages array and causing it to be sent to each peer.
 
 ```jsx
 const Chat = React.createClass({
@@ -71,7 +69,7 @@ const Chat = React.createClass({
             cursor.push('messages', input.value)
             input.value = ''
           }}
-        />
+        >send</button>
       </div>
     )
   }
@@ -81,3 +79,9 @@ peer.create('chatroom', {messages: []}, (cursor) => {
   React.render(<Chat cursor={cursor}/>, document.body)
 })
 ```
+
+
+
+### About
+
+Ultrawave was spun out of the [sinesaw](//github.com/charlieschwbacher/sinesaw) web audio DAW project.  It uses [peergroup](//github.com/charlieschwabacher/peergroup) for messaging over WebRTC data channels, and [subtree](//github.com/charlieschwabacher/subtree) for immutable data modeling with cursors.

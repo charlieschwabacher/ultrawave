@@ -1,5 +1,5 @@
-const PeerGroup = require('./peer_group')
-const Cursor = require('./cursor')
+const PeerGroup = require('peergroup')
+const Subtree = require('subtree')
 const MapMapMap = require('./data_structures/map_map_map')
 const MapMapSet = require('./data_structures/map_map_set')
 const MapArray = require('./data_structures/map_array')
@@ -189,7 +189,7 @@ module.exports = class Ultrawave {
     const changes = []
     this.changes.map.set(group, changes)
 
-    const handle = Cursor.create(initialData, (root, newChanges) => {
+    const handle = Subtree.create(initialData, (root, newChanges) => {
       const data = root.get()
       for (let change of newChanges) {
         const [method, args] = change
