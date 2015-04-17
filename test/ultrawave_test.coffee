@@ -6,10 +6,10 @@ global.window = require 'rtc-mocks'
 # require dependancies
 
 assert = require 'assert'
-GroupServer = require 'peergroup/lib/group_server'
+GroupServer = require 'peergroup/server'
 PeerGroup = require 'peergroup'
-Ultrawave = require '../scripts/ultrawave'
-VectorClock = require '../scripts/vector_clock'
+Ultrawave = require '../src/ultrawave'
+VectorClock = require '../src/vector_clock'
 
 PeerGroup.log = false
 GroupServer.log = false

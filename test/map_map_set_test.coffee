@@ -1,5 +1,5 @@
 assert = require 'assert'
-MapMapSet = require '../scripts/data_structures/map_map_set'
+MapMapSet = require '../src/data_structures/map_map_set'
 
 describe 'MapMapSet', ->
 

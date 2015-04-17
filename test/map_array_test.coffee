@@ -1,5 +1,5 @@
 assert = require 'assert'
-MapArray = require '../scripts/data_structures/map_array'
+MapArray = require '../src/data_structures/map_array'
 
 describe 'MapArray', ->
 

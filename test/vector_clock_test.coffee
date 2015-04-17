@@ -1,5 +1,5 @@
 assert = require 'assert'
-VectorClock = require '../scripts/vector_clock'
+VectorClock = require '../src/vector_clock'
 
 
 describe 'VectorClock', ->
