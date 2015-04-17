@@ -46,7 +46,7 @@ peer.leave(group)
 
 Data in Ultrawave is represented as a 'document' - a tree structure where nodes are either arrays or objects.  Changes are represented as the path to the node to be modified, a method, and arguemnts.  Methods on objects are 'set', 'delete', and 'merge', and on arrays are 'set', 'delete', and 'splice' (and shortcuts based on splice: 'push', 'pop', 'shift' and 'unshift').
 
-Changes are made through 'cursors' - objects that wrap the path to a specific node, and provide methods to read and write to that node and its subtree.  Every peer connects to every other peers in its group, and sends any changes made through its cursors to each of its peers.
+Changes are made through 'cursors' - objects that wrap the path to a specific node, and provide methods to read and write to that node and its subtree.  Every peer connects to every other peers in its group, and sends any changes made through its cursors to each of its peers.  For the full cursor api, see the [subtree](//github.com/charlieschwabacher/subtree) package.
 
 Because messages can be lost or received out of order, [vector clocks](//en.wikipedia.org/wiki/Vector_clock) are used to create an ordering for changes, so that the document state will be eventually consistant between peers.
 
@@ -84,4 +84,4 @@ peer.create('chatroom', {messages: []}, (cursor) => {
 
 ### About
 
-Ultrawave was spun out of the [sinesaw](//github.com/charlieschwbacher/sinesaw) web audio DAW project.  It uses [peergroup](//github.com/charlieschwabacher/peergroup) for messaging over WebRTC data channels, and [subtree](//github.com/charlieschwabacher/subtree) for immutable data modeling with cursors.
+Ultrawave was originally written for the [sinesaw](//github.com/charlieschwbacher/sinesaw) web audio DAW project.  It uses [peergroup](//github.com/charlieschwabacher/peergroup) for messaging over WebRTC data channels, and [subtree](//github.com/charlieschwabacher/subtree) for immutable data modeling with cursors.
