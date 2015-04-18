@@ -320,5 +320,10 @@ module.exports = class Ultrawave {
     this.peerGroup.close()
   }
 
-
 }
+
+// export cursor superclass for type checking
+
+Ultrawave.Cursor = Subtree.Cursor
+
+

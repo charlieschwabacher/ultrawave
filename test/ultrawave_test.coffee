@@ -21,6 +21,9 @@ port = 5100
 
 describe 'Ultrawave:', ->
 
+  describe 'Cursor', ->
+    assert Ultrawave.Cursor
+
   describe '#_applyRemoteChange', ->
 
     it 'should apply changes directly when clock is later than last

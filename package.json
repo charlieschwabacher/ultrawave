@@ -1,14 +1,14 @@
 {
   "name": "ultrawave",
   "description": "shared state between peers over WebRTC data channels",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "keywords": [
     "ultrawave"
   ],
   "license": "MIT",
   "author": "Charlie Schwabacher: <coschwabacher@gmail.com>",
   "scripts": {
-    "build": "babel src --out-dir lib",
+    "build": "babel src --out-dir lib --stage 0",
     "test": "mocha"
   },
   "repository": {
