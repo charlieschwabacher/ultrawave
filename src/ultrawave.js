@@ -9,7 +9,7 @@ const VectorClock = require('./vector_clock')
 const interval = 200
 
 
-module.exports = class Ultrawave {
+class Ultrawave {
 
   constructor(url) {
     this.handles = new Map
@@ -325,5 +325,10 @@ module.exports = class Ultrawave {
 // export cursor superclass for type checking
 
 Ultrawave.Cursor = Subtree.Cursor
+
+
+module.exports = Ultrawave
+
+
 
 
