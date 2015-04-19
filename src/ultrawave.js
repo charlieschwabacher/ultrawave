@@ -306,8 +306,8 @@ class Ultrawave {
   joinOrCreate(group, initialData, cb) {
     return new Promise((resolve, reject) => {
       let tries = 10
-      const attempt = (cb) => () => {
-        (tries -= 1 > 0) ? cb() : reject()
+      const attempt = (action) => () => {
+        (tries -= 1 > 0) ? action() : reject()
       }
 
       this.peerGroup.ready.then((id) => {

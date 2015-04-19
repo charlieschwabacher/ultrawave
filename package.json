@@ -9,6 +9,7 @@
   "author": "Charlie Schwabacher: <coschwabacher@gmail.com>",
   "scripts": {
     "build": "babel src --out-dir lib --stage 0",
+    "watch": "fsmonitor -d src -s '+*.js' npm run build",
     "test": "mocha"
   },
   "repository": {
@@ -34,6 +35,7 @@
   "devDependencies": {
     "babel": "^5.0.7",
     "coffee-script": "^1.8.0",
+    "fsmonitor": "^0.2.4",
     "mocha": "^2.2.1",
     "ws": "^0.7.1"
   }
