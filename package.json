@@ -1,7 +1,7 @@
 {
   "name": "ultrawave",
   "description": "shared state between peers over WebRTC data channels",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "keywords": [
     "ultrawave"
   ],
@@ -28,7 +28,7 @@
     "cursor": "https://github.com/charlieschwabacher/cursor.git",
     "peergroup": "0.0.1",
     "rtc-mocks": "0.0.0",
-    "subtree": "0.0.2",
+    "subtree": "0.0.3",
     "ws": "^0.7.1"
   },
   "devDependencies": {
