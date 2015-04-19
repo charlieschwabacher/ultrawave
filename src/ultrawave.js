@@ -206,18 +206,6 @@ class Ultrawave {
   }
 
 
-  create(group, initialData, cb) {
-    return new Promise((resolve, reject) => {
-      this.peerGroup.ready.then((id) => {
-        this.peerGroup.create(group).then(() => {
-          this.clocks.set(group, new VectorClock({id: id}))
-          resolve(this._startCursor(group, initialData, cb))
-        }).catch(reject)
-      })
-    })
-  }
-
-
   join(group, cb) {
     const events = this.peerGroup.events
 
@@ -298,6 +286,38 @@ class Ultrawave {
           this.peerGroup.on('document', onDocument)
 
         }).catch(reject)
+      })
+    })
+  }
+
+
+  create(group, initialData, cb) {
+    return new Promise((resolve, reject) => {
+      this.peerGroup.ready.then((id) => {
+        this.peerGroup.create(group).then(() => {
+          this.clocks.set(group, new VectorClock({id: id}))
+          resolve(this._startCursor(group, initialData, cb))
+        }).catch(reject)
+      })
+    })
+  }
+
+
+  joinOrCreate(group, initialData, cb) {
+    return new Promise((resolve, reject) => {
+      let tries = 10
+      const attempt = (cb) => () => {
+        (tries -= 1 > 0) ? cb() : reject()
+      }
+
+      this.peerGroup.ready.then((id) => {
+        const create = attempt(() => {
+          return this.create(group, initialData, cb).then(resolve).catch(join)
+        })
+        const join = attempt(() => {
+          return this.join(group, cb).then(resolve).catch(create)
+        })
+        join()
       })
     })
   }
