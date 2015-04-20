@@ -28,7 +28,7 @@
   "dependencies": {
     "peergroup": "0.0.2",
     "rtc-mocks": "0.0.0",
-    "subtree": "0.0.5",
+    "subtree": "0.0.7",
     "ws": "^0.7.1"
   },
   "devDependencies": {
