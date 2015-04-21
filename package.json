@@ -26,7 +26,6 @@
     "lib/"
   ],
   "dependencies": {
-    "cursor": "https://github.com/charlieschwabacher/cursor.git",
     "peergroup": "0.0.2",
     "rtc-mocks": "0.0.0",
     "subtree": "0.0.5",
