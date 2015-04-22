@@ -58,7 +58,7 @@ Because messages can be lost or received out of order, [vector clocks](//en.wiki
 
 ### Example
 
-Here is an example of a simple chat app built with Ultrawave - it initializes the data with an array as the root node, and then when data changes it renders a react component, passing it a cursor as a prop.  The react component reads data through the cursor to render the messages.  When the button is clicked, it updates data by pushing a new message onto the messages cursor and causing it to be sent to each peer.
+Here is an example of a simple chat app built with Ultrawave - it initializes the data with an array as the root node, and renders a react component when data changes.  The component is passed a cursor as a prop, from which it reads data to render the messages.  When the button is clicked, the component updates data by pushing a new message onto the cursor (causing the message to be sent to each peer).
 
 ```jsx
 const Chat = React.createClass({
@@ -85,9 +85,11 @@ peer.create('chatroom', [], (cursor) => {
 })
 ```
 
-There are some repos with example code available:
-  - a similar chat example: [ultrawave-chat-example](//github.com/charlieschwabacher/ultrawave-chat-example)
-  - a simple chess game: [ultrawave-chess-example](//github.com/charlieschwabacher/ultrawave-chess-example)
+**There are some repos with example code available:**
+
+a similar chat example: [ultrawave-chat-example](//github.com/charlieschwabacher/ultrawave-chat-example)
+
+a simple chess game: [ultrawave-chess-example](//github.com/charlieschwabacher/ultrawave-chess-example)
 
 
 
