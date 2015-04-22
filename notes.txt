@@ -1,13 +1,18 @@
 todo:
 
-when two peers join a room concurrently, sometimes one peer gets a blank clock
-(Uncaught Error: vector clock must have id) w/ a document message.. the peer is
-responding to requests before receiving 'start' from server?
+instead of server sending id immediately when client connects, client first
+sends 'request id', along w/ an optional key.  The server then sends the client
+'start' w/ id and aslo 'key' which the client keeps in localstorage and can use
+to reclaim their id after a page refresh.
 
-something is up w/ es6 version of cursor causing intermittent failures, figure
-why 'Cursor' var needs to be declared at the top level instead of closure in
-module.exports.create. (no idea what is up but tests only fail on my imac, not
-on my laptop)
+keep changes in a ring buffer instead of an array that grows without bounds
+
+change ultrawave contructor to take an options object instead of just port - let
+it configure bufferSize, max room members, etc.. think about ways to make server
+extensible.
+
+figure out strange inconsistently failing tests (no idea what is up but tests
+only fail on imac, not on laptop)
 
 
 
