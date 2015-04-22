@@ -86,8 +86,8 @@ peer.create('chatroom', [], (cursor) => {
 ```
 
 There are some repos with example code available:
-  - a similar chat example (ultrawave-chat-example)[//github.com/charlieschwabacher/ultrawave-chat-example]
-  - a simple chess game (ultrawave-chess-example)[//github.com/charlieschwabacher/ultrawave-chess-example]
+  - a similar chat example: [ultrawave-chat-example](//github.com/charlieschwabacher/ultrawave-chat-example)
+  - a simple chess game: [ultrawave-chess-example](//github.com/charlieschwabacher/ultrawave-chess-example)
 
 
 
