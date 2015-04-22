@@ -2,7 +2,7 @@
 
 Ultrawave is a library enabling shared state through direct communication between peers over WebRTC data channels.  Ultrawave makes it easy to build things like real time collaborative editing, messaging, and games.  It works great with, but is not tied to, [React](//github.com/facebook/react).
 
-There are some repos with example code available - see [ultrawave-chat-example](//github.com/charlieschwabacher/ultrawave-chat-example) for a simple peer to peer chat app, or [ultrawave-chess-example](//github.com/charlieschwabacher/ultrawave-chess-example) for a chess game.  Or, contine reading for some abbreviated example code a the end of the readme.
+There are some repos with example code available - see [ultrawave-chat-example](//github.com/charlieschwabacher/ultrawave-chat-example) for a simple peer to peer chat app, or [ultrawave-chess-example](//github.com/charlieschwabacher/ultrawave-chess-example) for a chess game.  Or, continue reading for some abbreviated example code a the end of the readme.
 
 
 ### Installation
