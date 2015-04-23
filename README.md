@@ -90,4 +90,4 @@ peer.create('chatroom', [], (cursor) => {
 
 ### About
 
-Ultrawave was originally written for the [sinesaw](//github.com/charlieschwbacher/sinesaw) web audio DAW project.  It uses [peergroup](//github.com/charlieschwabacher/peergroup) for messaging over WebRTC data channels, and [subtree](//github.com/charlieschwabacher/subtree) for immutable data modeling with cursors.
+Ultrawave was originally written for the [sinesaw](//github.com/charlieschwabacher/sinesaw) web audio DAW project.  It uses [peergroup](//github.com/charlieschwabacher/peergroup) for messaging over WebRTC data channels, and [subtree](//github.com/charlieschwabacher/subtree) for immutable data modeling with cursors.
