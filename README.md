@@ -65,15 +65,15 @@ Here is an example of a simple chat app built with Ultrawave - it initializes th
 ```jsx
 const Chat = React.createClass({
   render: function() {
-    const messages = this.props.cursor.get()
+    const messages = this.props.cursor
     return (
       <div>
-        {messages.map((message) => <p>{message}</p>)}
+        {messages.get().map((message) => <p>{message}</p>)}
         <input ref='input'/>
         <button
           onClick={() => {
             const input = refs.input.getDOMNode()
-            cursor.push(input.value)
+            messages.push(input.value)
             input.value = ''
           }}
         >send</button>
