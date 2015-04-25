@@ -27,7 +27,6 @@
   ],
   "dependencies": {
     "peergroup": "0.0.2",
-    "rtc-mocks": "0.0.0",
     "subtree": "0.0.7",
     "ws": "^0.7.1"
   },
@@ -35,6 +34,7 @@
     "babel": "^5.0.7",
     "coffee-script": "^1.8.0",
     "fsmonitor": "^0.2.4",
+    "rtc-mocks": "0.0.0",
     "mocha": "^2.2.1",
     "ws": "^0.7.1"
   }
