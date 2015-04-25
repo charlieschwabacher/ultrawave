@@ -19,7 +19,7 @@ WebRTC allows direct communication between peers, but requires a server to form 
 
 ```javascript
 const UltrawaveServer = require('ultrawave/server')
-let server = new UltrawaveServer(5000)
+let server = new UltrawaveServer({port: 5000})
 ```
 
 Then, in the browser, create an ultrawave and provide the url for your peering server.
