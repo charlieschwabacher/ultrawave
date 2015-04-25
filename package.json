@@ -1,7 +1,7 @@
 {
   "name": "ultrawave",
   "description": "shared state between peers over WebRTC data channels",
-  "version": "0.0.14",
+  "version": "0.0.15",
   "keywords": [
     "ultrawave"
   ],
