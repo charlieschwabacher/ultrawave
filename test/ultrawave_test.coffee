@@ -128,7 +128,7 @@ describe 'Ultrawave:', ->
     it 'the peer should send "request document" to the first peer it
         connects to', (done) ->
 
-      server = new GroupServer port += 1
+      server = new GroupServer port: port += 1
       client1 = new Ultrawave "ws:localhost:#{port}"
       client2 = new Ultrawave "ws:localhost:#{port}"
 
@@ -143,7 +143,7 @@ describe 'Ultrawave:', ->
     it 'the peer receiving "request document" should respond with "document",
         its current document state, and its clock', (done) ->
 
-      server = new GroupServer port += 1
+      server = new GroupServer port: port += 1
       client1 = new Ultrawave "ws:localhost:#{port}"
       client2 = new Ultrawave "ws:localhost:#{port}"
 
@@ -157,7 +157,7 @@ describe 'Ultrawave:', ->
     it 'the peer should send "request changes" to each other peer with the clock
         it received from the first peer', (done) ->
 
-      server = new GroupServer port += 1
+      server = new GroupServer port: port += 1
       client1 = new Ultrawave "ws:localhost:#{port}"
       client2 = new Ultrawave "ws:localhost:#{port}"
       client3 = new Ultrawave "ws:localhost:#{port}"
@@ -176,7 +176,7 @@ describe 'Ultrawave:', ->
     it 'peers receiving "request changes" should send any changes they have made
         after the attached clock to the requsting peer', (done) ->
 
-      server = new GroupServer port += 1
+      server = new GroupServer port: port += 1
       client = new Ultrawave "ws:localhost:#{port}"
 
       client.create('lobby', {}, ->)
@@ -203,7 +203,7 @@ describe 'Ultrawave:', ->
 
     it 'the peer should increment its vector clock', (done) ->
 
-      server = new GroupServer port += 1
+      server = new GroupServer port: port += 1
       client = new Ultrawave "ws:localhost:#{port}"
 
       root = null
@@ -222,7 +222,7 @@ describe 'Ultrawave:', ->
 
     it 'the peer should make the change locally', (done) ->
 
-      server = new GroupServer port += 1
+      server = new GroupServer port: port += 1
       client = new Ultrawave "ws:localhost:#{port}"
 
       root = null
@@ -239,7 +239,7 @@ describe 'Ultrawave:', ->
     it 'the peer should add the change and clock to its list of
         changes', (done) ->
 
-      server = new GroupServer port += 1
+      server = new GroupServer port: port += 1
       client = new Ultrawave "ws:localhost:#{port}"
 
       root = null
@@ -263,7 +263,7 @@ describe 'Ultrawave:', ->
     it 'the peer should send "change" with the method, data, and clock to each
         other peer', (done) ->
 
-      server = new GroupServer port += 1
+      server = new GroupServer port: port += 1
       client1 = new Ultrawave "ws:localhost:#{port}"
       client2 = new Ultrawave "ws:localhost:#{port}"
       client3 = new Ultrawave "ws:localhost:#{port}"
