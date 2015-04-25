@@ -7,13 +7,13 @@ to reclaim their id after a page refresh.
 
 keep changes in a ring buffer instead of an array that grows without bounds
 
+better handling of errors in joinOrCreate promise (need to throw specific
+errors, catch only those errors).. right now when there is an error in the
+cursor callback, it gets caught and silenced making tracking down difficult
+
 change ultrawave contructor to take an options object instead of just port - let
 it configure bufferSize, max room members, etc.. think about ways to make server
 extensible.
-
-figure out strange inconsistently failing tests (no idea what is up but tests
-only fail on imac, not on laptop)
-
 
 
 
