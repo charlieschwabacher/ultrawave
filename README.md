@@ -60,9 +60,9 @@ peer.leave(group)
 
 ### Changes made by any peer are applied everywhere
 
-Data in Ultrawave forms a tree structure where nodes are either arrays or objects.  Under the hood, changes are represented as the path from the root to the node to be modified, a method, and arguments.  Available methods on objects are 'set', 'delete', and 'merge', and on arrays are 'set', 'delete', and 'splice' (and shortcuts based on splice: 'push', 'pop', 'shift' and 'unshift').
+Data in Ultrawave forms a tree structure where nodes are either arrays or objects.  In messages between, changes are represented as the path from the root to the node to be modified, a method, and arguments.  Available methods on objects are 'set', 'delete', and 'merge', and on arrays are 'set', 'delete', and 'splice' (and shortcuts based on splice: 'push', 'pop', 'shift' and 'unshift').
 
-These changes are made through *cursors* - objects that wrap the path to a specific node, and provide methods to read and write to that node and its subtree.  Every peer connects to every other peers in its group, and sends any changes made through its cursors to each of its peers.  For the full cursor api, see the [subtree](//github.com/charlieschwabacher/subtree) package.
+These changes are made through *cursors* - objects that wrap the path to a specific node, and allow reads and writes to that node and its subtree.  Every peer connects to every other peer in its group, and sends any changes made through its cursors to each of its peers.  For the full cursor api, see the [subtree](//github.com/charlieschwabacher/subtree) package.
 
 Because messages can be lost or received out of order, [vector clocks](//en.wikipedia.org/wiki/Vector_clock) are used to detect missed messages and create an ordering for changes allowing the document state to be eventually consistant between peers.
 
