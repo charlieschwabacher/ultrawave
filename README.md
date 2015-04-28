@@ -60,7 +60,7 @@ peer.leave(group)
 
 ### Changes made by any peer are applied everywhere
 
-Data in Ultrawave forms a tree structure where nodes are either arrays or objects.  In messages between, changes are represented as the path from the root to the node to be modified, a method, and arguments.  Available methods on objects are 'set', 'delete', and 'merge', and on arrays are 'set', 'delete', and 'splice' (and shortcuts based on splice: 'push', 'pop', 'shift' and 'unshift').
+Data in Ultrawave forms a tree structure where nodes are either arrays or objects.  In messages between peers, changes are represented as the path from the root to the node to be modified, a method, and arguments.  Available methods on objects are 'set', 'delete', and 'merge', and on arrays are 'set', 'delete', and 'splice' (and shortcuts based on splice: 'push', 'pop', 'shift' and 'unshift').
 
 These changes are made through *cursors* - objects that wrap the path to a specific node, and allow reads and writes to that node and its subtree.  Every peer connects to every other peer in its group, and sends any changes made through its cursors to each of its peers.  For the full cursor api, see the [subtree](//github.com/charlieschwabacher/subtree) package.
 
