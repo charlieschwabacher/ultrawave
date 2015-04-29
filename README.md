@@ -97,13 +97,13 @@ peer.joinOrCreate('chatroom', [], (cursor) => {
 
 ### Considerations
 
-Ultrawave is great if you want to easily build peer to peer apps, but it is not best choice in every situation.  Here are a few cases in which it will not work well:
+Ultrawave is great if you want to easily build peer to peer apps, but it is not best choice for every application.  Here are a few cases in which it will not work well:
 
-- Right now only Chrome and Firefox support WebRTC peer to peer connections.  Microsoft has announced they plan to support WebRTC, but if you need to support IE or Safari today, Ultrawave (and WebRTC in general) will not work for you.
+- Right now only Chrome and Firefox support WebRTC peer to peer connections.  Microsoft has announced they plan support, but if you need your app to support IE or Safari today, Ultrawave (and WebRTC in general) will not work for you.
 
-- For users behind firewalls, the peer to peer connections used by WebRTC may be blocked - this can be handled by proxying traffic between peers through a [TURN](//www.html5rocks.com/en/tutorials/webrtc/infrastructure/) server, but if your users are behind firewalls and you need to use a central server anyways, WebSockets are likely to be a better choice.
+- For users behind firewalls, the peer to peer connections used by WebRTC may be blocked - this can be handled by proxying traffic between peers through a [TURN](//www.html5rocks.com/en/tutorials/webrtc/infrastructure/) server, but if you need to use a central server anyways, WebSockets are likely to be a better choice.
 
-- Ultrawave allows any peer to edit any part of the data tree, and does not provide an easy way to validate changes.  If you are building an app where trust between peers is an issue (for example if you are building a game and are worried about cheating), ultrawave is not a good choice.  Ultrawave is built on a lower level messaging library [peergroup](//github.com/charlieschwabacher/peergroup), which might be a better choice for you.
+- Ultrawave allows any peer to edit any part of the data tree and does not try to validate changes.  If you are building an app where trust between peers is an issue (for example if you are building a game and are worried about cheating), ultrawave is not a good choice.  Ultrawave is built on a lower level messaging library [peergroup](//github.com/charlieschwabacher/peergroup), which might work better for you.
 
 
 ### About
