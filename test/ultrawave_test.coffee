@@ -2,6 +2,10 @@
 
 global.WebSocket = require 'ws'
 global.window = require 'rtc-mocks'
+global.localStorage =
+  getItem: ->
+  setItem: ->
+
 
 # require dependancies
 
@@ -14,7 +18,7 @@ VectorClock = require '../src/vector_clock'
 PeerGroup.log = false
 GroupServer.log = false
 
-events = PeerGroup::events
+events = PeerGroup.events
 
 port = 5100
 
@@ -136,8 +140,7 @@ describe 'Ultrawave:', ->
 
       client1
         .create('lobby', {}, ->)
-        .then ->
-          client2.join 'lobby', ->
+        .then -> client2.join 'lobby', ->
         .catch done
 
     it 'the peer receiving "request document" should respond with "document",
@@ -147,6 +150,7 @@ describe 'Ultrawave:', ->
       client1 = new Ultrawave "ws:localhost:#{port}"
       client2 = new Ultrawave "ws:localhost:#{port}"
 
+      #client1.peerGroup.on 'request document', -> console.log '!!!!!!!client 1 got request'
       client2.peerGroup.on 'document', -> done()
 
       client1

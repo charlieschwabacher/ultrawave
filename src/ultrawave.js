@@ -16,7 +16,7 @@ class Ultrawave {
     this.clocks = new Map
     this.changes = new MapArray // arrays of changes [data, clock, method, args]
     this.timeouts = new MapMapMap
-    this.peerGroup = new PeerGroup(url)
+    this.peerGroup = new PeerGroup({url: url})
 
     // wait for id to be assigned by server before binding to other events
 
@@ -27,7 +27,7 @@ class Ultrawave {
 
       // add peers to clock immediately
 
-      this.peerGroup.on(this.peerGroup.events.peer, (group, id) => {
+      this.peerGroup.on(PeerGroup.events.peer, (group, id) => {
         const clock = this.clocks.get(group)
         if (clock != null) {
           clock.touch(id)
@@ -207,7 +207,7 @@ class Ultrawave {
 
 
   join(group, cb) {
-    const events = this.peerGroup.events
+    const events = PeerGroup.events
 
     return new Promise((resolve, reject) => {
       this.peerGroup.ready.then((id) => {
