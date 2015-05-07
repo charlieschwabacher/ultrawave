@@ -7,7 +7,6 @@ To build an app with ultrawave, you connect a group of peers and provide an init
 There are some repos with example code available, as well as an abbreviated example at the end of this readme:
  - [a simple peer to peer messaging app](//github.com/charlieschwabacher/ultrawave-chat-example)
  - [a multi player chess game](//github.com/charlieschwabacher/ultrawave-chess-example)
- - [a live multi user code editor](//github.com/charlieschwabacher/ultrawave-editor-example)
 
 
 ### Installation

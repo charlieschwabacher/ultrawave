@@ -1,19 +1,16 @@
 todo:
 
-instead of server sending id immediately when client connects, client first
-sends 'request id', along w/ an optional key.  The server then sends the client
-'start' w/ id and aslo 'key' which the client keeps in localstorage and can use
-to reclaim their id after a page refresh.
+try to write a test to reproduce issues w/ editor example in a background tab
 
 keep changes in a ring buffer instead of an array that grows without bounds
-
-better handling of errors in joinOrCreate promise (need to throw specific
-errors, catch only those errors).. right now when there is an error in the
-cursor callback, it gets caught and silenced making tracking down difficult
 
 change ultrawave contructor to take an options object instead of just port - let
 it configure bufferSize, max room members, etc.. think about ways to make server
 extensible.
+
+better handling of errors in joinOrCreate promise (need to throw specific
+errors, catch only those errors).. right now when there is an error in the
+cursor callback, it gets caught and silenced making tracking down difficult
 
 
 
