@@ -1,6 +1,6 @@
 # Ultrawave
 
-Ultrawave is a library enabling shared state through peer to peer over WebRTC data channels.  Ultrawave makes it easy to build things like real time collaborative editing, messaging, and games.  It works great with, but is not tied to, [React](//github.com/facebook/react).
+Ultrawave is a library enabling shared state through peer to peer connections over WebRTC data channels.  Ultrawave makes it easy to build things like real time collaborative editing, messaging, and games.  It works great with, but is not tied to, [React](//github.com/facebook/react).
 
 To build an app with ultrawave, you connect a group of peers and provide an initial chunk of JSON serializable data - peers are able to read and write to the shared data through [cursors](//github.com/charlieschwabacher/subtree), with changes made by any peer showing up for everyone in the group.  Data is eventually consistant between peers, even in the face of lost, duplicated, or misordered messages.
 
@@ -98,11 +98,11 @@ peer.joinOrCreate('chatroom', [], (cursor) => {
 
 Ultrawave is great if you want to easily build peer to peer apps, but it is not best choice for every application.  Here are a few cases in which it will not work well:
 
-- Right now only Chrome and Firefox support WebRTC peer to peer connections.  Microsoft has announced they plan support, but if you need your app to support IE or Safari today, Ultrawave (and WebRTC in general) will not work for you.
+- Right now only Chrome and Firefox support WebRTC peer to peer connections.  Microsoft has announced planned support, but if you need your app to run in IE or Safari today, Ultrawave (and WebRTC in general) will not work for you.
 
-- For users behind firewalls, the peer to peer connections used by WebRTC may be blocked - this can be handled by proxying traffic between peers through a [TURN](//www.html5rocks.com/en/tutorials/webrtc/infrastructure/) server, but if you need to use a central server anyways, WebSockets are likely to be a better choice.
+- For users behind firewalls, the peer to peer connections used by WebRTC may be blocked - this can be worked around by proxying traffic between peers through a [TURN](//www.html5rocks.com/en/tutorials/webrtc/infrastructure/) server, but if you end up needing to use a central server anyways, WebSockets are likely to be a better choice.
 
-- Ultrawave allows any peer to edit any part of the data tree and does not try to validate changes.  If you are building an app where trust between peers is an issue (for example if you are building a game and are worried about cheating), ultrawave is not a good choice.  Ultrawave is built on a lower level messaging library [peergroup](//github.com/charlieschwabacher/peergroup), which might work better for you.
+- Ultrawave allows any peer to edit any part of the data tree and does not attempt to validate changes.  If you are building an app where trust between peers is an issue (for example a game where you are worried about cheating), ultrawave is not a good choice.  Ultrawave is built on a lower level messaging library [peergroup](//github.com/charlieschwabacher/peergroup), which might work better for you.
 
 
 ### About
