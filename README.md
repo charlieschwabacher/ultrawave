@@ -96,7 +96,7 @@ peer.joinOrCreate('chatroom', [], (cursor) => {
 
 ### Considerations
 
-Ultrawave is great if you want to easily build peer to peer apps, but it is not best choice for every application.  Here are a few cases in which it will not work well:
+Ultrawave is great if you want to easily build peer to peer apps, but here are a few cases in which it will not work well:
 
 - Right now only Chrome and Firefox support WebRTC peer to peer connections.  Microsoft has announced planned support, but if you need your app to run in IE or Safari today, Ultrawave (and WebRTC in general) will not work for you.
 
