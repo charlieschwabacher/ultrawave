@@ -11,12 +11,23 @@ const interval = 200
 
 class Ultrawave {
 
-  constructor(url) {
+  constructor(urlOrPeerGroup) {
+
+    // ultrawave can be constructed with either a url, or a peergroup instance
+
+    if (typeof urlOrPeerGroup === 'string') {
+      this.peerGroup = new PeerGroup({url: urlOrPeerGroup})
+    } else if (urlOrPeerGroup instanceof PeerGroup) {
+      this.peerGroup = urlOrPeerGroup
+    } else {
+      throw new Error('Ultrawave constructor requires a url or PeerGroup')
+    }
+
     this.handles = new Map
     this.clocks = new Map
     this.changes = new MapArray // arrays of changes [data, clock, method, args]
     this.timeouts = new MapMapMap
-    this.peerGroup = new PeerGroup({url: url})
+
 
     // wait for id to be assigned by server before binding to other events
 

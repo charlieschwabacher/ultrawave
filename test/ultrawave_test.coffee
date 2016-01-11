@@ -25,6 +25,17 @@ port = 5100
 
 describe 'Ultrawave:', ->
 
+  describe 'Constructor', ->
+
+    it 'can be created with a url', ->
+      ultrawave = new Ultrawave 'ws:localhost'
+
+    it 'can be created with a PeerGroup instance', ->
+      ultrawave = new Ultrawave new PeerGroup url: 'ws:localhost'
+
+    it 'throws when neither a url or PeerGroup is provided', ->
+      assert.throws -> new Ultrawave
+
   describe 'Cursor', ->
     assert Ultrawave.Cursor
 
