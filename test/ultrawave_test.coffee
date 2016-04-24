@@ -28,23 +28,27 @@ describe 'Ultrawave:', ->
   describe 'Constructor', ->
 
     it 'can be created with a url', ->
-      ultrawave = new Ultrawave 'ws:localhost'
+      server = new GroupServer port: port += 1
+      ultrawave = new Ultrawave "ws:localhost:#{port}"
 
     it 'can be created with a PeerGroup instance', ->
-      ultrawave = new Ultrawave new PeerGroup url: 'ws:localhost'
+      server = new GroupServer port: port += 1
+      ultrawave = new Ultrawave new PeerGroup url: "ws:localhost:#{port}"
 
     it 'throws when neither a url or PeerGroup is provided', ->
       assert.throws -> new Ultrawave
 
   describe 'Cursor', ->
-    assert Ultrawave.Cursor
+    it 'should be exposed', ->
+      assert Ultrawave.Cursor
 
   describe '#_applyRemoteChange', ->
 
     it 'should apply changes directly when clock is later than last
         clock', (done) ->
 
-      ultrawave = new Ultrawave "ws:localhost"
+      server = new GroupServer port: port += 1
+      ultrawave = new Ultrawave "ws:localhost:#{port}"
 
       clock = new VectorClock id: 'a', a: 2
       args = ['b',2]
@@ -63,7 +67,8 @@ describe 'Ultrawave:', ->
 
     it 'should ignore changes that have already been applied', ->
 
-      ultrawave = new Ultrawave "ws:localhost"
+      server = new GroupServer port: port += 1
+      ultrawave = new Ultrawave "ws:localhost:#{port}"
 
       clock = new VectorClock id: 'a', a: 2
       args = [1,2]
@@ -82,7 +87,8 @@ describe 'Ultrawave:', ->
     it 'should apply changes in order when clock is before earlier
         clock', (done) ->
 
-      ultrawave = new Ultrawave "ws:localhost"
+      server = new GroupServer port: port += 1
+      ultrawave = new Ultrawave "ws:localhost:#{port}"
 
       changes = [
         [{}, {id: 'a', a: 1}, 'set', [0,1]]
@@ -120,7 +126,8 @@ describe 'Ultrawave:', ->
 
     it 'should use peer id to resolve ambiguous ordering of chnages', ->
 
-      ultrawave = new Ultrawave "ws:localhost"
+      server = new GroupServer port: port += 1
+      ultrawave = new Ultrawave "ws:localhost:#{port}"
 
       handle =
         data: -> {}
